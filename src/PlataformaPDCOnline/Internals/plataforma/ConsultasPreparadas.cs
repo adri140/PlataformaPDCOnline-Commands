@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Odbc;
+using OdbcDatabase;
 using OdbcDatabase.database;
 using Pdc.Messaging;
+using PlataformaPDCOnline.Internals.excepciones;
+using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 
 namespace PlataformaPDCOnline.Internals.plataforma
 {
@@ -11,13 +14,24 @@ namespace PlataformaPDCOnline.Internals.plataforma
     /// </summary>
     class ConsultasPreparadas
     {
-        private static InformixOdbcDao infx;
+        private InformixOdbcDao infx;
 
-        public static List<Dictionary<string, object>> getCommands()
+        private static ConsultasPreparadas consultas;
+
+        private ConsultasPreparadas()
+        {
+            infx = new InformixOdbcDao("webcommands");
+        }
+
+        public static ConsultasPreparadas Singelton()
+        {
+            if (consultas == null) consultas = new ConsultasPreparadas();
+            return consultas;
+        }
+
+        //te devuelve los datos de la tabla webcommands, imprescindible para trabajar!!
+        public List<Dictionary<string, object>> getCommands()
         { 
-            if (infx == null) infx = new InformixOdbcDao("webcommands");
-            else infx.TableName = "webcommands";
-
             string sql = "SELECT commandname, commandparameters, tablename, uidtablename, sqlcommand FROM webcommands WHERE active = ? ORDER BY ordercommand ASC";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>();
@@ -26,19 +40,80 @@ namespace PlataformaPDCOnline.Internals.plataforma
             Dictionary<string, OdbcType> types = new Dictionary<string, OdbcType>();
             types.Add("active", OdbcType.Int);
 
-            return infx.ExecuteSelect(sql, parameters, types);
+            OdbcCommand commandOdbc = new OdbcCommand(sql, infx.Database.Connection);
+
+            DatabaseTools.InsertParameters(parameters, types, commandOdbc);
+            List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
+            try
+            {
+                Console.WriteLine("abre conexion " + sql);
+                infx.Database.Connection.Open();
+                result = this.executeCommadForSelect(commandOdbc);
+                Console.WriteLine("cierra conexion " + sql);
+                infx.Database.Connection.Close();
+            }
+            catch (MyODBCException e)
+            {
+                Console.WriteLine("cierra conexion Exception " + sql);
+                if (infx.Database.Connection.State == System.Data.ConnectionState.Open) infx.Database.Connection.Close();
+                ErrorDBLog.Write("Error: " + e.ToString());
+            }
+            return result;
         }
 
-        public static List<Dictionary<string, object>> getRowData(string sql)
+        //devuelve los datos de la consulta sql de la tabla webcommands
+        public List<Dictionary<string, object>> getRowData(string sql)
         {
-            return infx.ExecuteSelect(sql, null, null);
+            OdbcCommand commandOdbc = new OdbcCommand(sql, infx.Database.Connection);
+
+            List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
+            try
+            {
+                Console.WriteLine("abre conexion " + sql);
+                infx.Database.Connection.Open();
+                result = this.executeCommadForSelect(commandOdbc);
+                Console.WriteLine("cierra conexion " + sql);
+                infx.Database.Connection.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("cierra conexion Exception " + sql);
+                if (infx.Database.Connection.State == System.Data.ConnectionState.Open) infx.Database.Connection.Close();
+                ErrorDBLog.Write("Error: " + e.ToString());
+            }
+            return result;
         }
 
-        public static int UpdateTableForGUID(WebCommandsController controller, Dictionary<string, object> row, string uid, string campoCodeId)
+        //ejecuta un command de ODBCCommand, que sea un select y te devuelve una lista de diccionarios
+        public List<Dictionary<string, object>> executeCommadForSelect(OdbcCommand command)
+        {
+            List<Dictionary<string, object>> tablaResult = new List<Dictionary<string, object>>();
+            try
+            {
+                OdbcDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Dictionary<string, object> rowResult = new Dictionary<string, object>();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        rowResult.Add(reader.GetName(i), reader.GetValue(i));
+                    }
+                    tablaResult.Add(rowResult);
+                }
+                
+            }
+            catch (MyODBCException e)
+            {
+                throw new MyODBCException("Error consultas preparadas" + e.ToString());
+            }
+            return tablaResult;
+        }
+
+        //actualiza el GUID de una fila en una tabla, por ahora solo comprovado con createWebUser
+        public int UpdateTableForGUID(WebCommandsController controller, Dictionary<string, object> row, string uid, string campoCodeId)
         {
             string sql = "UPDATE " + controller.TableName + " SET " + controller.UidTableName + " = ? WHERE " + campoCodeId + " = ?;";
-
-            Console.WriteLine("Sentencia: " + sql);
 
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add(controller.UidTableName, uid);
@@ -48,40 +123,36 @@ namespace PlataformaPDCOnline.Internals.plataforma
             types.Add(controller.UidTableName, OdbcType.VarChar);
             types.Add(campoCodeId, OdbcType.VarChar);
 
-            return infx.ExecuteUpdate(sql, parameters, types);
-        }
+            OdbcCommand commandOdbc = new OdbcCommand(sql, infx.Database.Connection);
 
-        public static int UpdateSumEventCommit(WebCommandsController controller, Command command, OdbcTransaction tran) //PROVAR CON EL THREAD
-        {
-            string sql = "SELECT eventcommit FROM " + controller.TableName + " WHERE " + controller.UidTableName + " = ?;";
-            
-            Dictionary<string, object> parameters = new Dictionary<string, object>();
-            parameters.Add(controller.UidTableName, command.AggregateId);
+            DatabaseTools.InsertParameters(parameters, types, commandOdbc);
 
-            Dictionary<string, OdbcType> types = new Dictionary<string, OdbcType>();
-            types.Add(controller.UidTableName, OdbcType.VarChar);
-
-            List<Dictionary<string, object>> returned = infx.ExecuteSelect(sql, parameters, types, tran);
-
-            if (returned.Count == 1)
+            int updateadas = 0;
+            try
             {
-                int eventcommit = 0;
-                foreach (Dictionary<string, object> dic in returned)
-                {
-                    eventcommit = (int)dic.GetValueOrDefault("changevalue");
-                }
+                Console.WriteLine("abre conexion " + sql);
+                infx.Database.Connection.Open();
 
-                sql = "UPDATE " + controller.TableName + " SET eventcommit = " + (eventcommit - 1) + " changevalue =  WHERE " + controller.UidTableName + " = ?;";
+                updateadas = commandOdbc.ExecuteNonQuery();
 
-                return infx.ExecuteUpdate(sql, parameters, types, tran);
+                Console.WriteLine("cierra conexion " + sql);
+                infx.Database.Connection.Close();
+            }
+            catch (MyODBCException e)
+            {
+                Console.WriteLine("cierra conexion Exception " + sql);
+                if (infx.Database.Connection.State == System.Data.ConnectionState.Open) infx.Database.Connection.Close();
+                ErrorDBLog.Write("Error: " + e.ToString());
             }
 
-            return 0;
+            return updateadas;
         }
 
-        public static int UpdateRestChangeValue(WebCommandsController controller, Command command, OdbcTransaction tran)
+        //Actualiza los valores de cambios y los eventos commiteados de la base de datos con una transaccion, si algo peta, no se actualizaran ninguno
+        public int UpdateChangesValuesAndCommitsValues(WebCommandsController controller, Command command, OdbcTransaction tran)
         {
-            string sql = "SELECT changevalue FROM " + controller.TableName + " WHERE " + controller.UidTableName + " = ?";
+
+            string sql = "SELECT eventcommit, changevalue FROM " + controller.TableName + " WHERE " + controller.UidTableName + " = ?";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add(controller.UidTableName, command.AggregateId);
@@ -89,24 +160,101 @@ namespace PlataformaPDCOnline.Internals.plataforma
             Dictionary<string, OdbcType> types = new Dictionary<string, OdbcType>();
             types.Add(controller.UidTableName, OdbcType.VarChar);
 
-            List<Dictionary<string, object>> returned = infx.ExecuteSelect(sql, parameters, types, tran);
+            OdbcCommand selectCommand = new OdbcCommand(sql, infx.Database.Connection, tran);
 
-            if(returned.Count == 1)
+            DatabaseTools.InsertParameters(parameters, types, selectCommand);
+
+            List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
+            try
+            {
+                result = this.executeCommadForSelect(selectCommand);
+            }
+            catch (MyODBCException e)
+            {
+                throw new MyODBCException("error en la select de la transaccion: " + e.ToString());
+            }
+
+            if(result.Count == 1)
             {
                 int changevalue = 0;
-                foreach(Dictionary<string, object> dic in returned)
+                int commitvalue = 0;
+                foreach(Dictionary<string, object> dic in result)
                 {
                     changevalue = (int) dic.GetValueOrDefault("changevalue");
+                    commitvalue = (int) dic.GetValueOrDefault("eventcommit");
                 }
+
+
+                sql = "UPDATE " + controller.TableName + " SET changevalue = ?, eventcommit = ?  WHERE " + controller.UidTableName + " = ?;";
+
+                parameters.Clear();
+
+                parameters.Add("changevalue", (changevalue - 1));
+                parameters.Add("eventcommit", (commitvalue + 1));
+                parameters.Add(controller.UidTableName, command.AggregateId);
+
+                types.Add("changevalue", OdbcType.Int);
+                types.Add("eventcommit", OdbcType.Int);
+
+                OdbcCommand updateCommand = new OdbcCommand(sql, infx.Database.Connection, tran);
+
+                DatabaseTools.InsertParameters(parameters, types, updateCommand);
                 
-                sql = "UPDATE " + controller.TableName + " SET changevalue = " + (changevalue - 1) + " changevalue =  WHERE " + controller.UidTableName + " = ?;";
-                
-                return infx.ExecuteUpdate(sql, parameters, types, tran);
+                try
+                {
+                    return updateCommand.ExecuteNonQuery();
+                }
+                catch (MyODBCException e)
+                {
+                    throw new MyODBCException("Error en la update de la transaccion: " + e.ToString());
+                }
             }
 
             return 0;
         }
 
+        //actualiza los datos eventcommit y changevalue de la base de datos, si los ha podido actualizar envia el command.
+        public async void SendCommands(WebCommandsController controller, Command commands)
+        {
+            if (commands != null)
+            {
+                InformixOdbcDatabase data = infx.Database;
+                OdbcTransaction transaction = null;
 
+                try
+                {
+                    Console.WriteLine("abre conexion para transaccion");
+                    data.Connection.Open();
+                    transaction = data.Connection.BeginTransaction();
+
+                    if (UpdateChangesValuesAndCommitsValues(controller, commands, transaction) == 0) throw new MyODBCException();
+                    
+                    transaction.Commit();
+                    if (infx.Database.Connection.State == System.Data.ConnectionState.Open)
+                    {
+                        infx.Database.Connection.Close();
+                        Console.WriteLine("cierra conexion");
+                    }
+
+                    Console.WriteLine("commit");
+
+                    await PrepareSender.Singelton().SendAsync(commands);
+
+                    Console.WriteLine("Command enviado");
+
+                }
+                catch (MyODBCException e)
+                {
+                    Console.WriteLine("rollback");
+                    transaction.Rollback();
+                    if (infx.Database.Connection.State == System.Data.ConnectionState.Open)
+                    {
+                        infx.Database.Connection.Close();
+                        Console.WriteLine("cierra conexion");
+                    }
+                    ErrorDBLog.Write("CommandsController Error: " + e.ToString());
+                }
+            }
+        }
     }
 }

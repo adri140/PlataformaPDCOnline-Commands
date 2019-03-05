@@ -17,6 +17,6 @@ namespace PlataformaPDCOnline.Internals.plataforma
         /// <param name="row">Fila de la base de datos informix, la cual comprovaremos si tiene cambios</param>
         /// <param name="controller">El controllador del command que se esta ejecutando en este momento</param>
         /// <returns>Devuelve un command que generara su padre</returns>
-        Queue<Command> RunSearcher(Dictionary<string, object> row, WebCommandsController controller);
+        Command RunSearcher(Dictionary<string, object> row, WebCommandsController controller);
     }
 }

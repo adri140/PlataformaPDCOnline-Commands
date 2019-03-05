@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data.Odbc;
 
 namespace OdbcDatabase.database
 {
     public class InformixOdbcDao
     {
-        public static InformixOdbcDatabase Database { get; private set; }
+        public InformixOdbcDatabase Database { get; private set; }
 
         public string TableName { get; set; }
 
@@ -26,12 +23,12 @@ namespace OdbcDatabase.database
             }
         }
 
-        public List<Dictionary<string, object>> ExecuteSelect(string sql, Dictionary<string, object> parameters, Dictionary<string, OdbcType> types)
+        /*public List<Dictionary<string, object>> ExecuteSelect(string sql, Dictionary<string, object> parameters, Dictionary<string, OdbcType> types)
         {
             List<Dictionary<string, object>> tableResult = new List<Dictionary<string, object>>();
             try
             {
-                if (sql.Trim().ToUpper().IndexOf("SELECT") != 0 || !sql.Trim().ToUpper().Contains("FROM")) throw new Exception("Consulta select mal formada o incompleta, sentencia: " + sql);
+                if (sql.Trim().ToUpper().IndexOf("SELECT") != 0 && !sql.Trim().ToUpper().Contains("FROM")) throw new Exception("Consulta select mal formada o incompleta, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("UPDATE")) throw new Exception("La consulta 'select' no puede incluir la palabra 'update', valor no permitido, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("DELETE")) throw new Exception("La consulta 'select' no puede incluir la palabra 'delete', valor no permitido, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("DROP")) throw new Exception("La consulta 'select' no puede incluir la palabra 'drop', valor no permitido, sentencia: " + sql);
@@ -48,6 +45,7 @@ namespace OdbcDatabase.database
                 try
                 {
                     Database.Connection.Open();
+                    Console.WriteLine("abre conexion");
 
                     OdbcDataReader reader = command.ExecuteReader();
 
@@ -68,6 +66,7 @@ namespace OdbcDatabase.database
                 finally
                 {
                     Database.Connection.Close();
+                    Console.WriteLine("cierra conexion");
                 }
             }
             catch (Exception e)
@@ -83,7 +82,7 @@ namespace OdbcDatabase.database
             List<Dictionary<string, object>> tableResult = new List<Dictionary<string, object>>();
             try
             {
-                if (sql.Trim().ToUpper().IndexOf("SELECT") != 0 || !sql.Trim().ToUpper().Contains("FROM")) throw new Exception("Consulta select mal formada o incompleta, sentencia: " + sql);
+                if (sql.Trim().ToUpper().IndexOf("SELECT") != 0 && sql.Trim().ToUpper().Contains("FROM")) throw new Exception("Consulta select mal formada o incompleta, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("UPDATE")) throw new Exception("La consulta 'select' no puede incluir la palabra 'update', valor no permitido, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("DELETE")) throw new Exception("La consulta 'select' no puede incluir la palabra 'delete', valor no permitido, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("DROP")) throw new Exception("La consulta 'select' no puede incluir la palabra 'drop', valor no permitido, sentencia: " + sql);
@@ -113,14 +112,18 @@ namespace OdbcDatabase.database
                 }
                 catch (OdbcException ex)
                 {
-                    ErrorDBLog.Write("Error: " + ex.Message);
+                    Console.WriteLine("cierra conexion para transaccion rollback");
                     tran.Rollback();
+                    Database.Connection.Close();
+                    ErrorDBLog.Write("Error: " + ex.Message);
                 }
             }
             catch (Exception e)
             {
-                ErrorDBLog.Write("Error: " + e.Message);
+                Console.WriteLine("cierra conexion para transaccion rollback");
                 tran.Rollback();
+                Database.Connection.Close();
+                ErrorDBLog.Write("Error: " + e.Message);
             }
 
             return tableResult;
@@ -132,7 +135,7 @@ namespace OdbcDatabase.database
 
             try
             {
-                if (sql.Trim().ToUpper().IndexOf("UPDATE") != 0 || !sql.Trim().ToUpper().Contains("SET")) throw new Exception("Consulta update mal formada o incompleta, sentencia: " + sql);
+                if (sql.Trim().ToUpper().IndexOf("UPDATE") != 0 && sql.Trim().ToUpper().Contains("SET")) throw new Exception("Consulta update mal formada o incompleta, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("DELETE")) throw new Exception("La consulta 'update' no puede incluir la palabra 'delete', valor no permitido, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("DROP")) throw new Exception("La consulta 'update' no puede incluir la palabra 'drop', valor no permitido, sentencia: " + sql);
 
@@ -149,6 +152,7 @@ namespace OdbcDatabase.database
                 try
                 {
                     Database.Connection.Open();
+                    Console.WriteLine("abre conexion");
 
                     updateadas = command.ExecuteNonQuery();
                 }
@@ -159,6 +163,7 @@ namespace OdbcDatabase.database
                 finally
                 {
                     Database.Connection.Close();
+                    Console.WriteLine("cierra conexion");
                 }
             }
             catch(Exception e)
@@ -175,7 +180,7 @@ namespace OdbcDatabase.database
 
             try
             {
-                if (sql.Trim().ToUpper().IndexOf("UPDATE") != 0 || !sql.Trim().ToUpper().Contains("SET")) throw new Exception("Consulta update mal formada o incompleta, sentencia: " + sql);
+                if (sql.Trim().ToUpper().IndexOf("UPDATE") != 0 && sql.Trim().ToUpper().Contains("SET")) throw new Exception("Consulta update mal formada o incompleta, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("DELETE")) throw new Exception("La consulta 'update' no puede incluir la palabra 'delete', valor no permitido, sentencia: " + sql);
                 if (sql.Trim().ToUpper().Contains("DROP")) throw new Exception("La consulta 'update' no puede incluir la palabra 'drop', valor no permitido, sentencia: " + sql);
 
@@ -192,20 +197,25 @@ namespace OdbcDatabase.database
                 try
                 {
                     updateadas = command.ExecuteNonQuery();
+                    ErrorDBLog.Write("info: " + sql + " updateadas: " + updateadas);
                 }
                 catch (OdbcException ex)
                 {
-                    ErrorDBLog.Write("Error: " + ex.Message + ". Sentence: " + sql);
+                    Console.WriteLine("cierra conexion para transaccion rollback");
                     tran.Rollback();
+                    Database.Connection.Close();
+                    ErrorDBLog.Write("Error: " + ex.Message + ". Sentence: " + sql);
                 }
             }
             catch (Exception e)
             {
-                ErrorDBLog.Write("Error: " + e.Message + ". Sentence: " + sql);
+                Console.WriteLine("cierra conexion para transaccion rollback");
                 tran.Rollback();
+                Database.Connection.Close();
+                ErrorDBLog.Write("Error: " + e.Message + ". Sentence: " + sql);
             }
 
             return updateadas;
-        }
+        }*/
     }
 }

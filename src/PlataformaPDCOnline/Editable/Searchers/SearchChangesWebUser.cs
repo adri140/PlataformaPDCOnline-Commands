@@ -8,18 +8,19 @@ namespace PlataformaPDCOnline.Editable.Searchers
 {
     public class SearchCreateWebUser : ISearcher
     {
-        public Queue<Command> RunSearcher(Dictionary<string, object> row, WebCommandsController controller) //obligatorio tanto por la interface como que es el metodo que se ejecutara para buscar y crear el command
+        public Command RunSearcher(Dictionary<string, object> row, WebCommandsController controller) //obligatorio tanto por la interface como que es el metodo que se ejecutara para buscar y crear el command
         {
-            Queue<Command> commands = new Queue<Command>();
+            Command commands = null;
 
             if (row.GetValueOrDefault("userid").ToString().Equals(""))
             {
                 string uid = Guid.NewGuid().ToString(); //generamos el guid del usuario
 
-                if(ConsultasPreparadas.UpdateTableForGUID(controller, row, uid, "usercode") == 1)
+                //hay que indicar que campo de la tabla es la clave por la que realizaremos las busquedas
+                if(ConsultasPreparadas.Singelton().UpdateTableForGUID(controller, row, uid, "usercode") == 1)
                 {
-                    CreateWebUser command = new CreateWebUser(uid) { username = row.GetValueOrDefault("username").ToString(), usercode = row.GetValueOrDefault("usercode").ToString() };
-                    commands.Enqueue(command);
+                    Console.WriteLine("Preparando el command CreateWebUser");
+                    commands = new CreateWebUser(uid) { username = row.GetValueOrDefault("username").ToString(), usercode = row.GetValueOrDefault("usercode").ToString() };
                 }              
             }
 
@@ -29,9 +30,9 @@ namespace PlataformaPDCOnline.Editable.Searchers
 
     public class SearchUpdateWebUser : ISearcher
     {
-        public Queue<Command> RunSearcher(Dictionary<string, object> row, WebCommandsController controller)
+        public Command RunSearcher(Dictionary<string, object> row, WebCommandsController controller)
         {
-            Queue<Command> commands = new Queue<Command>();
+            Command commands = null;
             Console.WriteLine("Running searcher Update");
 
             /*
@@ -45,16 +46,15 @@ namespace PlataformaPDCOnline.Editable.Searchers
 
     public class SearchDeleteWebUser : ISearcher
     {
-        public Queue<Command> RunSearcher(Dictionary<string, object> row, WebCommandsController controller)
+        public Command RunSearcher(Dictionary<string, object> row, WebCommandsController controller)
         {
-            Queue<Command> commands = new Queue<Command>();
+            Command commands = null;
 
             //lo sullo seria comprovar que en la otra base de datos no se ha eliminado, si se ha eliminado se quitaria el flag de changevalue a -1
             if (row.GetValueOrDefault("userid").ToString() != "")
             {
-                commands = new Queue<Command>();
-                DeleteWebUser command = new DeleteWebUser(row.GetValueOrDefault("userid").ToString());
-                commands.Enqueue(command);
+                Console.WriteLine("Preparando el command DeleteWebUser");
+                commands = new DeleteWebUser(row.GetValueOrDefault("userid").ToString());
             }
 
             return commands;
