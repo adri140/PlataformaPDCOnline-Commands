@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Data.Odbc;
 using OdbcDatabase;
 using OdbcDatabase.database;
+using OdbcDatabase.excepciones;
 using Pdc.Messaging;
-using PlataformaPDCOnline.Internals.excepciones;
 using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 
 namespace PlataformaPDCOnline.Internals.plataforma
@@ -20,7 +20,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
 
         private ConsultasPreparadas()
         {
-            infx = new InformixOdbcDao("webcommands");
+            infx = new InformixOdbcDao();
         }
 
         public static ConsultasPreparadas Singelton()
@@ -31,7 +31,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
 
         //te devuelve los datos de la tabla webcommands, imprescindible para trabajar!!
         public List<Dictionary<string, object>> getCommands()
-        { 
+        {
             string sql = "SELECT commandname, commandparameters, tablename, uidtablename, sqlcommand FROM webcommands WHERE active = ? ORDER BY ordercommand ASC";
 
             Dictionary<string, object> parameters = new Dictionary<string, object>();
@@ -46,15 +46,15 @@ namespace PlataformaPDCOnline.Internals.plataforma
             List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
             try
             {
-                Console.WriteLine("abre conexion " + sql);
+                //Console.WriteLine("abre conexion " + sql);
                 infx.Database.Connection.Open();
                 result = this.executeCommadForSelect(commandOdbc);
-                Console.WriteLine("cierra conexion " + sql);
+                //Console.WriteLine("cierra conexion " + sql);
                 infx.Database.Connection.Close();
             }
-            catch (MyODBCException e)
+            catch (MyOdbcException e)
             {
-                Console.WriteLine("cierra conexion Exception " + sql);
+                //Console.WriteLine("cierra conexion Exception " + sql);
                 if (infx.Database.Connection.State == System.Data.ConnectionState.Open) infx.Database.Connection.Close();
                 ErrorDBLog.Write("Error: " + e.ToString());
             }
@@ -69,15 +69,15 @@ namespace PlataformaPDCOnline.Internals.plataforma
             List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
             try
             {
-                Console.WriteLine("abre conexion " + sql);
+                //Console.WriteLine("abre conexion " + sql);
                 infx.Database.Connection.Open();
                 result = this.executeCommadForSelect(commandOdbc);
-                Console.WriteLine("cierra conexion " + sql);
+                //Console.WriteLine("cierra conexion " + sql);
                 infx.Database.Connection.Close();
             }
             catch (Exception e)
             {
-                Console.WriteLine("cierra conexion Exception " + sql);
+                //Console.WriteLine("cierra conexion Exception " + sql);
                 if (infx.Database.Connection.State == System.Data.ConnectionState.Open) infx.Database.Connection.Close();
                 ErrorDBLog.Write("Error: " + e.ToString());
             }
@@ -103,9 +103,9 @@ namespace PlataformaPDCOnline.Internals.plataforma
                 }
                 
             }
-            catch (MyODBCException e)
+            catch (MyOdbcException e)
             {
-                throw new MyODBCException("Error consultas preparadas" + e.ToString());
+                throw new MyOdbcException("Error consultas preparadas" + e.ToString());
             }
             return tablaResult;
         }
@@ -130,17 +130,17 @@ namespace PlataformaPDCOnline.Internals.plataforma
             int updateadas = 0;
             try
             {
-                Console.WriteLine("abre conexion " + sql);
+                //Console.WriteLine("abre conexion " + sql);
                 infx.Database.Connection.Open();
 
                 updateadas = commandOdbc.ExecuteNonQuery();
 
-                Console.WriteLine("cierra conexion " + sql);
+                //Console.WriteLine("cierra conexion " + sql);
                 infx.Database.Connection.Close();
             }
-            catch (MyODBCException e)
+            catch (MyOdbcException e)
             {
-                Console.WriteLine("cierra conexion Exception " + sql);
+                //Console.WriteLine("cierra conexion Exception " + sql);
                 if (infx.Database.Connection.State == System.Data.ConnectionState.Open) infx.Database.Connection.Close();
                 ErrorDBLog.Write("Error: " + e.ToString());
             }
@@ -169,28 +169,24 @@ namespace PlataformaPDCOnline.Internals.plataforma
             {
                 result = this.executeCommadForSelect(selectCommand);
             }
-            catch (MyODBCException e)
+            catch (MyOdbcException e)
             {
-                throw new MyODBCException("error en la select de la transaccion: " + e.ToString());
+                throw new MyOdbcException("error en la select de la transaccion: " + e.ToString());
             }
 
             if(result.Count == 1)
             {
-                int changevalue = 0;
-                int commitvalue = 0;
+                parameters.Clear();
+               
                 foreach(Dictionary<string, object> dic in result)
                 {
-                    changevalue = (int) dic.GetValueOrDefault("changevalue");
-                    commitvalue = (int) dic.GetValueOrDefault("eventcommit");
+                    parameters.Add("changevalue", ((int) (dic.GetValueOrDefault("changevalue")) - 1));
+                    parameters.Add("eventcommit", ((int) (dic.GetValueOrDefault("eventcommit")) + 1));
                 }
 
 
                 sql = "UPDATE " + controller.TableName + " SET changevalue = ?, eventcommit = ?  WHERE " + controller.UidTableName + " = ?;";
-
-                parameters.Clear();
-
-                parameters.Add("changevalue", (changevalue - 1));
-                parameters.Add("eventcommit", (commitvalue + 1));
+                
                 parameters.Add(controller.UidTableName, command.AggregateId);
 
                 types.Add("changevalue", OdbcType.Int);
@@ -204,9 +200,9 @@ namespace PlataformaPDCOnline.Internals.plataforma
                 {
                     return updateCommand.ExecuteNonQuery();
                 }
-                catch (MyODBCException e)
+                catch (MyOdbcException e)
                 {
-                    throw new MyODBCException("Error en la update de la transaccion: " + e.ToString());
+                    throw new MyOdbcException("Error en la update de la transaccion: " + e.ToString());
                 }
             }
 
@@ -223,36 +219,39 @@ namespace PlataformaPDCOnline.Internals.plataforma
 
                 try
                 {
-                    Console.WriteLine("abre conexion para transaccion");
+                    //Console.WriteLine("abre conexion para transaccion");
                     data.Connection.Open();
                     transaction = data.Connection.BeginTransaction();
 
-                    if (UpdateChangesValuesAndCommitsValues(controller, commands, transaction) == 0) throw new MyODBCException();
-                    
+                    if (UpdateChangesValuesAndCommitsValues(controller, commands, transaction) == 0) throw new MyOdbcException();
+
+                    //Console.WriteLine("commit");
                     transaction.Commit();
+
                     if (infx.Database.Connection.State == System.Data.ConnectionState.Open)
                     {
                         infx.Database.Connection.Close();
-                        Console.WriteLine("cierra conexion");
+                        //Console.WriteLine("cierra conexion");
                     }
-
-                    Console.WriteLine("commit");
-
+                    
                     await PrepareSender.Singelton().SendAsync(commands);
 
-                    Console.WriteLine("Command enviado");
+                   // Console.WriteLine("Command enviado");
 
                 }
-                catch (MyODBCException e)
+                catch (MyOdbcException e)
                 {
-                    Console.WriteLine("rollback");
                     transaction.Rollback();
                     if (infx.Database.Connection.State == System.Data.ConnectionState.Open)
                     {
                         infx.Database.Connection.Close();
-                        Console.WriteLine("cierra conexion");
+                       // Console.WriteLine("cierra conexion");
                     }
-                    ErrorDBLog.Write("CommandsController Error: " + e.ToString());
+                    ErrorDBLog.Write("Error: " + e.ToString());
+                }
+                catch(Exception e)
+                {
+                    ErrorDBLog.Write("Error: " + e.ToString());
                 }
             }
         }

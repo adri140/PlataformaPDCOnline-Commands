@@ -1,8 +1,5 @@
 ﻿using Pdc.Messaging;
-using PlataformaPDCOnline.Internals;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace PlataformaPDCOnline.Internals.plataforma
 {

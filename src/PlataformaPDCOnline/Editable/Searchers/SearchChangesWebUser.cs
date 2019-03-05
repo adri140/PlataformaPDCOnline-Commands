@@ -35,10 +35,11 @@ namespace PlataformaPDCOnline.Editable.Searchers
             Command commands = null;
             Console.WriteLine("Running searcher Update");
 
+            commands = new UpdateWebUser(row.GetValueOrDefault("userid").ToString()) { username = row.GetValueOrDefault("username").ToString() };
             /*
              * Passos a seguir:
              * buscamos en la otra base de datos el id de nuestra row, si no existe, creamos y enviamos un command de createWebUser.
-             * si existe, comparamos parametro a parametro que cambio hay, una vez encontrado, lo añadimos a la cola de commands a enviar
+             * si existe, comparamos parametro a parametro que cambio hay, una vez encontrado, instanciamos y devolvemos el command
              */ 
             return commands;
         }

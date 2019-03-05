@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OdbcDatabase.excepciones;
+using System;
 using System.Collections.Generic;
 using System.Data.Odbc;
 using System.IO;
@@ -48,8 +49,8 @@ namespace OdbcDatabase.database
                     if (dataParameter.GetValueOrDefault(key) != null) command.Parameters.Add("@" + key, typeData.GetValueOrDefault(key)).Value = dataParameter.GetValueOrDefault(key);
                 }
                 catch(Exception e)
-                { 
-                    ErrorDBLog.Write("Error: " + e.Message);        
+                {
+                    throw new MyOdbcException(e.Message);      
                 }
             }
         }

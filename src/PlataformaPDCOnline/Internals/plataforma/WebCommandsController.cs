@@ -1,14 +1,8 @@
-﻿using OdbcDatabase;
-using OdbcDatabase.database;
+﻿using OdbcDatabase.excepciones;
 using Pdc.Messaging;
-using PlataformaPDCOnline.Editable;
-using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 using System;
 using System.Collections.Generic;
-using System.Data.Odbc;
 using System.Reflection;
-using System.Text;
-using System.Threading;
 
 namespace PlataformaPDCOnline.Internals.plataforma
 {
@@ -20,15 +14,11 @@ namespace PlataformaPDCOnline.Internals.plataforma
         public readonly string UidTableName;
         public readonly string SqlCommand;
 
-        /* private Semaphore StopSemaforo;
-         private Semaphore MutexCommandsSend;
-         private Queue<Dictionary<WebCommandsController, Command>> Commands;*/
-
         /// <summary>
         /// A partir de una fila de la tabla commands, genero este controller, mediante reflexion.
         /// </summary>
         /// <param name="controller">Diccionario (string, object) donde string es la columna y object es el dato en la base de datos</param>
-        public WebCommandsController(Dictionary<string, object> controller/*, Semaphore stopSemaforo, Semaphore mutexCommandsSend, Queue<Dictionary<WebCommandsController, Command>> commands*/)
+        public WebCommandsController(Dictionary<string, object> controller)
         {
             this.TableName = controller.GetValueOrDefault("tablename").ToString();
             this.CommandName = controller.GetValueOrDefault("commandname").ToString();
@@ -52,16 +42,13 @@ namespace PlataformaPDCOnline.Internals.plataforma
                     result = result + parameter + ", ";
                 }
             }
-            result = result + "], SqlCommand: " + this.SqlCommand;
-            return result;
+            return result + "], SqlCommand: " + this.SqlCommand;
         }
 
+        //ejecuta el search para cada fila recuperada de la base de datos, antes de esto, debemos encontrar el search correspondiente para el command que toca, para eso usamos reflexion
         public void RunDetector()
         {
             List<Dictionary<string, object>> table = ConsultasPreparadas.Singelton().getRowData(this.SqlCommand);
-
-            //por cada fila que hay que actualizar de una tabla de la base de datos
-
 
             Type[] types = Assembly.GetExecutingAssembly().GetTypes(); //recuperamos todos los tipos
 
@@ -80,17 +67,14 @@ namespace PlataformaPDCOnline.Internals.plataforma
                             {
                                 foreach (Dictionary<string, object> row in table)
                                 {
-                                    Command commands = (Command)method.Invoke(searchar, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
+                                    Command commands = (Command) method.Invoke(searchar, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
                                     ConsultasPreparadas.Singelton().SendCommands(this, commands); //nos devuelve los commands, los cuales enviaremos
                                 }
                             }
                         }
+                        break;
                     }
-                    else
-                    {
-                        throw new Exception("Se ha encontrado la clase " + t.Name + ", pero no implementa ISearcher o SearcherChangesController."); //cambiar-lo
-                    }
-                    break;
+                    else throw new MyNoImplementedException("Se ha encontrado la clase " + t.Name + ", pero no implementa ISearcher."); //ok
                 }
             }
         }

@@ -10,15 +10,15 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 {
     public class PrepareSender
     {
-        private static PrepareSender prepare = null;
+        private static PrepareSender commandSender = null;
 
         public static ICommandSender Singelton()
         {
-            if(prepare == null)
+            if(commandSender == null)
             {
-                prepare = new PrepareSender();
+                commandSender = new PrepareSender();
             }
-            return prepare.sender;
+            return commandSender.sender;
         }
 
         private readonly IConfiguration configuration;

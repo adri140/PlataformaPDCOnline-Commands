@@ -6,12 +6,8 @@ namespace OdbcDatabase.database
     {
         public InformixOdbcDatabase Database { get; private set; }
 
-        public string TableName { get; set; }
-
-        public InformixOdbcDao(string tableName)
+        public InformixOdbcDao()
         {
-            this.TableName = tableName;
-
             try
             {
                 if (Database == null) { Database = new InformixOdbcDatabase(DatabaseTools.GetConnectionString("[OdbcInformixServer]")); }
