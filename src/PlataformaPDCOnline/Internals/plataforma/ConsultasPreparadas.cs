@@ -110,7 +110,14 @@ namespace PlataformaPDCOnline.Internals.plataforma
             return tablaResult;
         }
 
-        //actualiza el GUID de una fila en una tabla, por ahora solo comprovado con createWebUser
+        /// <summary>
+        /// Actualiza el GUID de una fila en una tabla, comprovado con webusers y webaccessgroup
+        /// </summary>
+        /// <param name="controller"></param>
+        /// <param name="row"></param>
+        /// <param name="uid"></param>
+        /// <param name="campoCodeId"></param>
+        /// <returns>Devuelve le numero de filas actualizadas en la base de  datos</returns>
         public int UpdateTableForGUID(WebCommandsController controller, Dictionary<string, object> row, string uid, string campoCodeId)
         {
             string sql = "UPDATE " + controller.TableName + " SET " + controller.UidTableName + " = ? WHERE " + campoCodeId + " = ?;";
@@ -148,8 +155,9 @@ namespace PlataformaPDCOnline.Internals.plataforma
             return updateadas;
         }
 
+        //esto no tiene que estar aqui, pero se utilizara para la aplicacion de recibir eventos, asi que por ahora se queda comentado
         //Actualiza los valores de cambios y los eventos commiteados de la base de datos con una transaccion, si algo peta, no se actualizaran ninguno
-        public int UpdateChangesValuesAndCommitsValues(WebCommandsController controller, Command command, OdbcTransaction tran)
+        /*public int UpdateChangesValuesAndCommitsValues(WebCommandsController controller, Command command, OdbcTransaction tran)
         {
 
             string sql = "SELECT eventcommit, changevalue FROM " + controller.TableName + " WHERE " + controller.UidTableName + " = ?";
@@ -180,7 +188,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
                
                 foreach(Dictionary<string, object> dic in result)
                 {
-                    parameters.Add("changevalue", ((int) (dic.GetValueOrDefault("changevalue")) - 1));
+                    parameters.Add("changevalue", controller.CommandName.IndexOf("Create") == 0 ? 0 : ((int)(dic.GetValueOrDefault("changevalue")) - 1)); //si el command comienza por create
                     parameters.Add("eventcommit", ((int) (dic.GetValueOrDefault("eventcommit")) + 1));
                 }
 
@@ -207,49 +215,18 @@ namespace PlataformaPDCOnline.Internals.plataforma
             }
 
             return 0;
-        }
+        }*/
 
         //actualiza los datos eventcommit y changevalue de la base de datos, si los ha podido actualizar envia el command.
-        public async void SendCommands(WebCommandsController controller, Command commands)
+        public async void SendCommands(Command commands)
         {
             if (commands != null)
             {
-                InformixOdbcDatabase data = infx.Database;
-                OdbcTransaction transaction = null;
-
                 try
                 {
-                    //Console.WriteLine("abre conexion para transaccion");
-                    data.Connection.Open();
-                    transaction = data.Connection.BeginTransaction();
-
-                    if (UpdateChangesValuesAndCommitsValues(controller, commands, transaction) == 0) throw new MyOdbcException();
-
-                    //Console.WriteLine("commit");
-                    transaction.Commit();
-
-                    if (infx.Database.Connection.State == System.Data.ConnectionState.Open)
-                    {
-                        infx.Database.Connection.Close();
-                        //Console.WriteLine("cierra conexion");
-                    }
-                    
                     await PrepareSender.Singelton().SendAsync(commands);
-
-                   // Console.WriteLine("Command enviado");
-
                 }
-                catch (MyOdbcException e)
-                {
-                    transaction.Rollback();
-                    if (infx.Database.Connection.State == System.Data.ConnectionState.Open)
-                    {
-                        infx.Database.Connection.Close();
-                       // Console.WriteLine("cierra conexion");
-                    }
-                    ErrorDBLog.Write("Error: " + e.ToString());
-                }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     ErrorDBLog.Write("Error: " + e.ToString());
                 }

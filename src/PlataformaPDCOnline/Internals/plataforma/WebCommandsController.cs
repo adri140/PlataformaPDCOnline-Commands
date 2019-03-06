@@ -22,6 +22,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
         {
             this.TableName = controller.GetValueOrDefault("tablename").ToString();
             this.CommandName = controller.GetValueOrDefault("commandname").ToString();
+            //Console.WriteLine("nombre: " + this.CommandName +  " indice de create: " + this.CommandName.IndexOf("Create"));
             this.UidTableName = controller.GetValueOrDefault("uidtablename").ToString();
             this.SqlCommand = controller.GetValueOrDefault("sqlcommand").ToString();
             this.CommandParameters = new List<string>();
@@ -68,7 +69,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
                                 foreach (Dictionary<string, object> row in table)
                                 {
                                     Command commands = (Command) method.Invoke(searchar, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
-                                    ConsultasPreparadas.Singelton().SendCommands(this, commands); //nos devuelve los commands, los cuales enviaremos
+                                    ConsultasPreparadas.Singelton().SendCommands(commands); //nos devuelve los commands, los cuales enviaremos
                                 }
                             }
                         }

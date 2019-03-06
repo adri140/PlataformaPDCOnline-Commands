@@ -11,6 +11,8 @@ namespace PlataformaPDCOnline
         public static void Main(string[] args)
         {
             StartFunction();
+            Console.WriteLine("presiona Intro para salir....");
+            Console.ReadLine();
         }
 
         //inicia el programa, cargando todos los commands que hay en la base de datos informix
@@ -32,7 +34,7 @@ namespace PlataformaPDCOnline
                 try
                 {
                     WebCommandsController controller = new WebCommandsController(row); //generamos un webController a partir de la informacion de este controller
-                    Console.WriteLine("preparando trabajo para: " + controller.CommandName);
+                    Console.WriteLine("Prepare Detector: preparando trabajo para: " + controller.CommandName);
                     controller.RunDetector(); //lanzamos el controller
                 }
                 catch (MyNoImplementedException ni)

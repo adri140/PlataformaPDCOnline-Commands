@@ -8,6 +8,7 @@ using System.Reflection;
 
 namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 {
+    //contiene todos los datos para poder crear el sender, usamos singelton para que solo se pueda instanciar una vez
     public class PrepareSender
     {
         private static PrepareSender commandSender = null;
