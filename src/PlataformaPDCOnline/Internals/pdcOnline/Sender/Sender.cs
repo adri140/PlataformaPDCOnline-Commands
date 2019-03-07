@@ -9,15 +9,15 @@ using System.Reflection;
 namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 {
     //contiene todos los datos para poder crear el sender, usamos singelton para que solo se pueda instanciar una vez
-    public class PrepareSender
+    public class Sender
     {
-        private static PrepareSender commandSender = null;
+        private static Sender commandSender = null;
 
         public static ICommandSender Singelton()
         {
             if(commandSender == null)
             {
-                commandSender = new PrepareSender();
+                commandSender = new Sender();
             }
             return commandSender.sender;
         }
@@ -25,7 +25,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
         private readonly IConfiguration configuration;
         public ICommandSender sender;
 
-        private PrepareSender()
+        private Sender()
         {
             configuration = GetConfiguration();
             this.sender = GetProcessManagerServices().GetRequiredService<ICommandSender>();
@@ -38,10 +38,10 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             var c = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
-                    { "DistributedRedisCache:InstanceName", "Cache." },
-                    { "RedisDistributedLocks:InstanceName", "Locks." },
-                    { "DocumentDBPersistence:Database", "Tests" },
-                    { "DocumentDBPersistence:Collection", "Events" },
+                    /*{ "DistributedRedisCache:InstanceName", "Cache." },
+                    { "RedisDistributedLocks:InstanceName", "Locks." },*/
+                    /*{ "DocumentDBPersistence:Database", "Tests" },
+                    { "DocumentDBPersistence:Collection", "Events" },*/
                     { "ProcessManager:Sender:EntityPath", "core-test-commands" },
                     { "BoundedContext:Publisher:EntityPath", "core-test-events" },
                     { "CommandHandler:Receiver:EntityPath", "core-test-commands" },

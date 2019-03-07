@@ -224,7 +224,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
             {
                 try
                 {
-                    await PrepareSender.Singelton().SendAsync(commands);
+                    await Sender.Singelton().SendAsync(commands);
                 }
                 catch (Exception e)
                 {

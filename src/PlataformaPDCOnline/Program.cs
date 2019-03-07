@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using OdbcDatabase.excepciones;
+using PlataformaPDCOnline.Editable.pdcOnline.Commands;
+using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 using PlataformaPDCOnline.Internals.plataforma;
 
 namespace PlataformaPDCOnline
@@ -10,7 +12,10 @@ namespace PlataformaPDCOnline
 
         public static void Main(string[] args)
         {
-            StartFunction();
+            //StartFunction();
+            Console.WriteLine("presiona Intro para salir....");
+            Console.ReadLine();
+            Sender.Singelton().SendAsync(new CreateWebUser("hola") { username = "adrian", usercode="47421417V" });
             Console.WriteLine("presiona Intro para salir....");
             Console.ReadLine();
         }
