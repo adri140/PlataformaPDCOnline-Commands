@@ -89,7 +89,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
         }
 
         //ejecuta un command de ODBCCommand, que sea un select y te devuelve una lista de diccionarios
-        public List<Dictionary<string, object>> ExecuteCommadForSelect(OdbcCommand command)
+        private List<Dictionary<string, object>> ExecuteCommadForSelect(OdbcCommand command)
         {
             List<Dictionary<string, object>> tablaResult = new List<Dictionary<string, object>>();
             try

@@ -23,7 +23,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
         }
 
         private readonly IConfiguration configuration;
-        public ICommandSender sender;
+        private ICommandSender sender;
 
         private Sender()
         {
@@ -31,7 +31,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             this.sender = GetProcessManagerServices().GetRequiredService<ICommandSender>();
         }
 
-        private static IConfiguration GetConfiguration()
+        private  IConfiguration GetConfiguration()
         {
             var assembly = Assembly.GetExecutingAssembly();
 

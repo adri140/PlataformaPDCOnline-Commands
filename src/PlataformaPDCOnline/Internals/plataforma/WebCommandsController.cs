@@ -49,8 +49,6 @@ namespace PlataformaPDCOnline.Internals.plataforma
         //ejecuta el search para cada fila recuperada de la base de datos, antes de esto, debemos encontrar el search correspondiente para el command que toca, para eso usamos reflexion
         public void RunDetector()
         {
-            List<Dictionary<string, object>> table = ConsultasPreparadas.Singelton().GetRowData(this.SqlCommand);
-
             Type[] types = Assembly.GetExecutingAssembly().GetTypes(); //recuperamos todos los tipos
 
             //por cada typo 'clase'
@@ -62,6 +60,8 @@ namespace PlataformaPDCOnline.Internals.plataforma
 
                     if (search is ISearcher) //si la instancia implementa ISearcher y SearcherChangesController
                     {
+                        List<Dictionary<string, object>> table = ConsultasPreparadas.Singelton().GetRowData(this.SqlCommand);
+
                         MethodInfo method = search.GetType().GetMethod("RunSearcher");
 
                         foreach (Dictionary<string, object> row in table)
@@ -69,7 +69,6 @@ namespace PlataformaPDCOnline.Internals.plataforma
                             Command commands = (Command)method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
                             ConsultasPreparadas.Singelton().SendCommands(commands); //nos devuelve los commands, los cuales enviaremos
                         }
-                        break;
                     }
                     else throw new MyNoImplementedException("Se ha encontrado la clase " + t.Name + ", pero no implementa ISearcher."); //ok
                 }
