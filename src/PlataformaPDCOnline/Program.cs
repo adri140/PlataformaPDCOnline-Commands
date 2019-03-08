@@ -12,10 +12,10 @@ namespace PlataformaPDCOnline
 
         public static void Main(string[] args)
         {
-            //StartFunction();
-            Console.WriteLine("presiona Intro para salir....");
-            Console.ReadLine();
-            Sender.Singelton().SendAsync(new CreateWebUser("hola") { username = "adrian", usercode="47421417V" });
+            StartFunction();
+            //Console.WriteLine("presiona Intro para salir....");
+            //Console.ReadLine();
+            //Sender.Singelton().SendAsync(new CreateWebUser("hola") { username = "adrian", usercode="47421417V" });
             Console.WriteLine("presiona Intro para salir....");
             Console.ReadLine();
         }
@@ -23,7 +23,7 @@ namespace PlataformaPDCOnline
         //inicia el programa, cargando todos los commands que hay en la base de datos informix
         private static void StartFunction()
         {
-            List<Dictionary<string, object>> webCommandsTable = ConsultasPreparadas.Singelton().getCommands();
+            List<Dictionary<string, object>> webCommandsTable = ConsultasPreparadas.Singelton().GetCommands();
 
             if (webCommandsTable.Count > 0) PrepareDetector(webCommandsTable); //si hay commands con los que trabajar, trabajamos
         }

@@ -49,7 +49,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
         //ejecuta el search para cada fila recuperada de la base de datos, antes de esto, debemos encontrar el search correspondiente para el command que toca, para eso usamos reflexion
         public void RunDetector()
         {
-            List<Dictionary<string, object>> table = ConsultasPreparadas.Singelton().getRowData(this.SqlCommand);
+            List<Dictionary<string, object>> table = ConsultasPreparadas.Singelton().GetRowData(this.SqlCommand);
 
             Type[] types = Assembly.GetExecutingAssembly().GetTypes(); //recuperamos todos los tipos
 

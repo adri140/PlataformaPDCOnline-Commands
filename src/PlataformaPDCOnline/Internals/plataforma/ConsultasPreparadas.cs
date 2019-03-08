@@ -14,78 +14,82 @@ namespace PlataformaPDCOnline.Internals.plataforma
     /// </summary>
     class ConsultasPreparadas
     {
-        private InformixOdbcDao infx;
+        private InformixOdbcDao Infx;
 
-        private static ConsultasPreparadas consultas;
+        private static ConsultasPreparadas Consultas;
 
         private ConsultasPreparadas()
         {
-            infx = new InformixOdbcDao();
+            Infx = new InformixOdbcDao();
         }
 
         public static ConsultasPreparadas Singelton()
         {
-            if (consultas == null) consultas = new ConsultasPreparadas();
-            return consultas;
+            if (Consultas == null) Consultas = new ConsultasPreparadas();
+            return Consultas;
         }
 
         //te devuelve los datos de la tabla webcommands, imprescindible para trabajar!!
-        public List<Dictionary<string, object>> getCommands()
+        public List<Dictionary<string, object>> GetCommands()
         {
             string sql = "SELECT commandname, commandparameters, tablename, uidtablename, sqlcommand FROM webcommands WHERE active = ? ORDER BY ordercommand ASC";
 
-            Dictionary<string, object> parameters = new Dictionary<string, object>();
-            parameters.Add("active", 1);
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "active", 1 }
+            };
 
-            Dictionary<string, OdbcType> types = new Dictionary<string, OdbcType>();
-            types.Add("active", OdbcType.Int);
+            Dictionary<string, OdbcType> types = new Dictionary<string, OdbcType>
+            {
+                { "active", OdbcType.Int }
+            };
 
-            OdbcCommand commandOdbc = new OdbcCommand(sql, infx.Database.Connection);
+            OdbcCommand commandOdbc = new OdbcCommand(sql, Infx.Database.Connection);
 
             DatabaseTools.InsertParameters(parameters, types, commandOdbc);
             List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
             try
             {
                 //Console.WriteLine("abre conexion " + sql);
-                infx.Database.Connection.Open();
-                result = this.executeCommadForSelect(commandOdbc);
+                Infx.Database.Connection.Open();
+                result = this.ExecuteCommadForSelect(commandOdbc);
                 //Console.WriteLine("cierra conexion " + sql);
-                infx.Database.Connection.Close();
+                Infx.Database.Connection.Close();
             }
             catch (MyOdbcException e)
             {
                 //Console.WriteLine("cierra conexion Exception " + sql);
-                if (infx.Database.Connection.State == System.Data.ConnectionState.Open) infx.Database.Connection.Close();
+                if (Infx.Database.Connection.State == System.Data.ConnectionState.Open) Infx.Database.Connection.Close();
                 ErrorDBLog.Write("Error: " + e.ToString());
             }
             return result;
         }
 
         //devuelve los datos de la consulta sql de la tabla webcommands
-        public List<Dictionary<string, object>> getRowData(string sql)
+        public List<Dictionary<string, object>> GetRowData(string sql)
         {
-            OdbcCommand commandOdbc = new OdbcCommand(sql, infx.Database.Connection);
+            OdbcCommand commandOdbc = new OdbcCommand(sql, Infx.Database.Connection);
 
             List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
             try
             {
                 //Console.WriteLine("abre conexion " + sql);
-                infx.Database.Connection.Open();
-                result = this.executeCommadForSelect(commandOdbc);
+                Infx.Database.Connection.Open();
+                result = this.ExecuteCommadForSelect(commandOdbc);
                 //Console.WriteLine("cierra conexion " + sql);
-                infx.Database.Connection.Close();
+                Infx.Database.Connection.Close();
             }
             catch (Exception e)
             {
                 //Console.WriteLine("cierra conexion Exception " + sql);
-                if (infx.Database.Connection.State == System.Data.ConnectionState.Open) infx.Database.Connection.Close();
+                if (Infx.Database.Connection.State == System.Data.ConnectionState.Open) Infx.Database.Connection.Close();
                 ErrorDBLog.Write("Error: " + e.ToString());
             }
             return result;
         }
 
         //ejecuta un command de ODBCCommand, que sea un select y te devuelve una lista de diccionarios
-        public List<Dictionary<string, object>> executeCommadForSelect(OdbcCommand command)
+        public List<Dictionary<string, object>> ExecuteCommadForSelect(OdbcCommand command)
         {
             List<Dictionary<string, object>> tablaResult = new List<Dictionary<string, object>>();
             try
@@ -122,15 +126,19 @@ namespace PlataformaPDCOnline.Internals.plataforma
         {
             string sql = "UPDATE " + controller.TableName + " SET " + controller.UidTableName + " = ? WHERE " + campoCodeId + " = ?;";
 
-            Dictionary<string, object> parameters = new Dictionary<string, object>();
-            parameters.Add(controller.UidTableName, uid);
-            parameters.Add(campoCodeId, row.GetValueOrDefault(campoCodeId).ToString());
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { controller.UidTableName, uid },
+                { campoCodeId, row.GetValueOrDefault(campoCodeId).ToString() }
+            };
 
-            Dictionary<string, OdbcType> types = new Dictionary<string, OdbcType>();
-            types.Add(controller.UidTableName, OdbcType.VarChar);
-            types.Add(campoCodeId, OdbcType.VarChar);
+            Dictionary<string, OdbcType> types = new Dictionary<string, OdbcType>
+            {
+                { controller.UidTableName, OdbcType.VarChar },
+                { campoCodeId, OdbcType.VarChar }
+            };
 
-            OdbcCommand commandOdbc = new OdbcCommand(sql, infx.Database.Connection);
+            OdbcCommand commandOdbc = new OdbcCommand(sql, Infx.Database.Connection);
 
             DatabaseTools.InsertParameters(parameters, types, commandOdbc);
 
@@ -138,17 +146,17 @@ namespace PlataformaPDCOnline.Internals.plataforma
             try
             {
                 //Console.WriteLine("abre conexion " + sql);
-                infx.Database.Connection.Open();
+                Infx.Database.Connection.Open();
 
                 updateadas = commandOdbc.ExecuteNonQuery();
 
                 //Console.WriteLine("cierra conexion " + sql);
-                infx.Database.Connection.Close();
+                Infx.Database.Connection.Close();
             }
             catch (MyOdbcException e)
             {
                 //Console.WriteLine("cierra conexion Exception " + sql);
-                if (infx.Database.Connection.State == System.Data.ConnectionState.Open) infx.Database.Connection.Close();
+                if (Infx.Database.Connection.State == System.Data.ConnectionState.Open) Infx.Database.Connection.Close();
                 ErrorDBLog.Write("Error: " + e.ToString());
             }
 
@@ -156,13 +164,13 @@ namespace PlataformaPDCOnline.Internals.plataforma
         }
 
         //actualiza los datos eventcommit y changevalue de la base de datos, si los ha podido actualizar envia el command.
-        public async void SendCommands(Command commands)
+        public async void SendCommands(Command command)
         {
-            if (commands != null)
+            if (command != null)
             {
                 try
                 {
-                    await Sender.Singelton().SendAsync(commands);
+                    await Sender.Singelton().SendAsync(command);
                 }
                 catch (Exception e)
                 {
