@@ -58,20 +58,16 @@ namespace PlataformaPDCOnline.Internals.plataforma
             {
                 if (t.Name == "Search" + this.CommandName) //si el nombre de la clase es igual a 'Search' + 'el nombre del controlador'
                 {
-                    object searchar = Activator.CreateInstance(t); //creamos una instancia de esta clase
+                    object search = Activator.CreateInstance(t); //creamos una instancia de esta clase
 
-                    if (searchar is ISearcher) //si la instancia implementa ISearcher y SearcherChangesController
+                    if (search is ISearcher) //si la instancia implementa ISearcher y SearcherChangesController
                     {
-                        foreach (MethodInfo method in searchar.GetType().GetMethods()) //sacamos todos sus methods y por cada uno
+                        MethodInfo method = search.GetType().GetMethod("RunSearcher");
+
+                        foreach (Dictionary<string, object> row in table)
                         {
-                            if (method.Name.Equals("RunSearcher")) //miramos si se llama 'RunSearchar', el qual comparara los datos de la base de datos informix con la base de datos ... para el command 'commandName'
-                            {
-                                foreach (Dictionary<string, object> row in table)
-                                {
-                                    Command commands = (Command) method.Invoke(searchar, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
-                                    ConsultasPreparadas.Singelton().SendCommands(commands); //nos devuelve los commands, los cuales enviaremos
-                                }
-                            }
+                            Command commands = (Command)method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
+                            ConsultasPreparadas.Singelton().SendCommands(commands); //nos devuelve los commands, los cuales enviaremos
                         }
                         break;
                     }
