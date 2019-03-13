@@ -1,5 +1,6 @@
 ﻿using OdbcDatabase.excepciones;
 using Pdc.Messaging;
+using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -13,6 +14,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
         public readonly string TableName;
         public readonly string UidTableName;
         public readonly string SqlCommand;
+        private static Sender Sender;
 
         /// <summary>
         /// A partir de una fila de la tabla commands, genero este controller, mediante reflexion.
@@ -30,6 +32,17 @@ namespace PlataformaPDCOnline.Internals.plataforma
             foreach (string parameter in controller.GetValueOrDefault("commandparameters").ToString().Split(","))
             {
                 this.CommandParameters.Add(parameter.Trim());
+            }
+
+            if (Sender == null) Sender = new Sender();
+        }
+
+        //temporal
+        public static void EndSender()
+        {
+            if(Sender != null)
+            {
+                Sender.end();
             }
         }
 
@@ -67,7 +80,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
                         foreach (Dictionary<string, object> row in table)
                         {
                             Command commands = (Command)method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
-                            ConsultasPreparadas.Singelton().SendCommands(commands); //nos devuelve los commands, los cuales enviaremos
+                            Sender.sendAsync(commands);                                                                                   //ConsultasPreparadas.Singelton().SendCommands(commands); //nos devuelve los commands, los cuales enviaremos
                         }
                     }
                     else throw new MyNoImplementedException("Se ha encontrado la clase " + t.Name + ", pero no implementa ISearcher."); //ok

@@ -162,21 +162,5 @@ namespace PlataformaPDCOnline.Internals.plataforma
 
             return updateadas;
         }
-
-        //actualiza los datos eventcommit y changevalue de la base de datos, si los ha podido actualizar envia el command.
-        public async void SendCommands(Command command)
-        {
-            if (command != null)
-            {
-                try
-                {
-                    await Sender.Singelton().SendAsync(command);
-                }
-                catch (Exception e)
-                {
-                    ErrorDBLog.Write("Error: " + e.ToString());
-                }
-            }
-        }
     }
 }

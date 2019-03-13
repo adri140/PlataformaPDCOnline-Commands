@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using OdbcDatabase.excepciones;
 using PlataformaPDCOnline.Editable.pdcOnline.Commands;
 using PlataformaPDCOnline.Internals.pdcOnline.Sender;
@@ -10,14 +11,16 @@ namespace PlataformaPDCOnline
     class Program
     {
 
+        public static Sender send;
+
         public static void Main(string[] args)
         {
             StartFunction();
-            //Console.WriteLine("presiona Intro para salir....");
-            //Console.ReadLine();
-            //Sender.Singelton().SendAsync(new CreateWebUser("hola") { username = "adrian", usercode="47421417V" });
+            //sendMeTest();
             Console.WriteLine("presiona Intro para salir....");
             Console.ReadLine();
+
+            WebCommandsController.EndSender(); //temporal
         }
 
         //inicia el programa, cargando todos los commands que hay en la base de datos informix
@@ -49,20 +52,22 @@ namespace PlataformaPDCOnline
             }
         }
 
-        //temporal, muestra los datos de una lista de diccionarios
-        /*private static void Most(List<Dictionary<string, object>> data)
+        //temporal
+        public static void sendMeTest()
         {
-            if (data != null)
-            {
-                foreach (Dictionary<string, object> fila in data)
-                {
-                    Console.WriteLine();
-                    foreach (string columna in fila.Keys)
-                    {
-                        Console.WriteLine(columna + ": " + fila.GetValueOrDefault(columna));
-                    }
-                }
-            }
-        }*/
+            send = new Sender();
+
+            Thread.Sleep(1000);
+            Console.WriteLine("enviando command CreateWebUser");
+            send.sendAsync(new CreateWebUser("33") { username = "adrian", usercode = "001"});
+
+            Thread.Sleep(1000);
+            Console.WriteLine("enviando command UpdateWebUser");
+            send.sendAsync(new UpdateWebUser("33") { username = "adrian recio" });
+
+            Thread.Sleep(1000);
+            Console.WriteLine("enviando command DeleteWebUser");
+            send.sendAsync(new DeleteWebUser("33"));
+        }
     }
 }
