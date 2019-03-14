@@ -17,7 +17,6 @@ namespace PlataformaPDCOnline
         public static void Main(string[] args)
         {
             StartFunction();
-            //sendMeTest();
 
             while(!end)
             {
@@ -57,23 +56,5 @@ namespace PlataformaPDCOnline
             end = true;
             Console.WriteLine("terminado el envio de commands");
         }
-
-        //temporal
-        /*public static void sendMeTest()
-        {
-            send = new Sender();
-
-            Thread.Sleep(1000);
-            Console.WriteLine("enviando command CreateWebUser");
-            send.sendAsync(new CreateWebUser("33") { username = "adrian", usercode = "001"});
-
-            Thread.Sleep(1000);
-            Console.WriteLine("enviando command UpdateWebUser");
-            send.sendAsync(new UpdateWebUser("33") { username = "adrian recio" });
-
-            Thread.Sleep(1000);
-            Console.WriteLine("enviando command DeleteWebUser");
-            send.sendAsync(new DeleteWebUser("33"));
-        }*/
     }
 }
