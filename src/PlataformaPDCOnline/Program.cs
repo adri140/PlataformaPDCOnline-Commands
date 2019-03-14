@@ -11,16 +11,22 @@ namespace PlataformaPDCOnline
     class Program
     {
 
-        public static Sender send;
+        public static Boolean end = false;
+
 
         public static void Main(string[] args)
         {
             StartFunction();
             //sendMeTest();
+
             Console.WriteLine("presiona Intro para salir....");
             Console.ReadLine();
 
-            WebCommandsController.EndSender(); //temporal
+            WebCommandsController.EndSender();
+
+            //send.EndJobAsync(); ;
+
+            //WebCommandsController.EndSender(); //temporal
         }
 
         //inicia el programa, cargando todos los commands que hay en la base de datos informix
@@ -35,7 +41,7 @@ namespace PlataformaPDCOnline
         /// Metodo que extrae un command de la base de datos y busca por cada tabla que cambios son de este command
         /// </summary>
         /// <param name="commandsTable">Recibe una lista de diccionarios (string, object) donde string es la columna y el object es el contenido de la fila  en la base de datos</param>
-        private static void PrepareDetector(List<Dictionary<string, object>> commandsTable)
+        private async static void PrepareDetector(List<Dictionary<string, object>> commandsTable)
         {
             foreach (Dictionary<string, object> row in commandsTable)
             {
@@ -43,17 +49,19 @@ namespace PlataformaPDCOnline
                 {
                     WebCommandsController controller = new WebCommandsController(row); //generamos un webController a partir de la informacion de este controller
                     Console.WriteLine("Prepare Detector: preparando trabajo para: " + controller.CommandName);
-                    controller.RunDetector(); //lanzamos el controller
+                    await controller.RunDetector(); //lanzamos el controller
                 }
                 catch (MyNoImplementedException ni)
                 {
                     Console.WriteLine(ni.Message);
                 }
             }
+            end = true;
+            Console.WriteLine("terminado el envio de commands");
         }
 
         //temporal
-        public static void sendMeTest()
+        /*public static void sendMeTest()
         {
             send = new Sender();
 
@@ -68,6 +76,6 @@ namespace PlataformaPDCOnline
             Thread.Sleep(1000);
             Console.WriteLine("enviando command DeleteWebUser");
             send.sendAsync(new DeleteWebUser("33"));
-        }
+        }*/
     }
 }

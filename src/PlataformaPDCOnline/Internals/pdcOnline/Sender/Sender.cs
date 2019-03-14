@@ -4,7 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Pdc.Hosting;
 using Pdc.Messaging;
+using Pdc.Messaging.ServiceBus;
 using PlataformaPDCOnline.Editable.pdcOnline.Commands;
 using System;
 using System.Collections.Generic;
@@ -17,44 +19,52 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
     //contiene todos los datos para poder crear el sender, usamos singelton para que solo se pueda instanciar una vez
     public class Sender
     {
+        
         private readonly IConfiguration configuration;
+        private IServiceProvider services;
+        private IServiceScope scope;
+        private IHostedService boundedContext;
         private ICommandSender sender;
-        private Task boundedContextWorker;
-        private CancellationTokenSource cancellationTokenSource;
 
         public Sender()
         {
             configuration = GetConfiguration();
-            sender = GetProcessManagerServices().GetRequiredService<ICommandSender>();
-            cancellationTokenSource = new CancellationTokenSource();
+            services = GetBoundedContextServices();
 
-            //temporal, recive los commands y crea los eventos, despues los reenvia, creo
-            var boundedContextServices = GetBoundedContextServices();
-            boundedContextWorker = ExecuteBoundedContextAsync(boundedContextServices, cancellationTokenSource.Token);
+            this.InicializeAsync();
         }
 
-        public async void sendAsync(Command command)
+        private async Task InicializeAsync()
         {
-            await sender.SendAsync(command);
+            scope = services.CreateScope();
+            using (scope)
+            {
+                boundedContext = services.GetRequiredService<IHostedService>();
+
+                await boundedContext.StartAsync(default);
+
+                sender = services.GetRequiredService<ICommandSender>();
+            }
         }
 
-        //temporal
-        public void end()
+        public async Task SendCommandAsync(Command command)
         {
-            Console.WriteLine("end");
-            cancellationTokenSource.Cancel();
-            Thread.Sleep(2000);
+            if (command != null)
+            {
+                using (scope)
+                {
+                    await sender.SendAsync(command);
+                    Console.WriteLine("enviado command");
+                }
+            }
         }
 
-        private IServiceProvider GetProcessManagerServices()
+        public async Task EndJobAsync()
         {
-            var services = new ServiceCollection();
-
-            services.AddLogging(builder => builder.AddDebug());
-
-            services.AddAzureServiceBusCommandSender(options => options.Bind(configuration.GetSection("ProcessManager:Sender"))); //configura la suscripción a la que se envian los commands
-
-            return services.BuildServiceProvider();
+            using (scope)
+            {
+                await boundedContext.StopAsync(default);
+            }
         }
 
         private static IConfiguration GetConfiguration()
@@ -88,56 +98,55 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 #endif
         }
 
-        //temporal
         private IServiceProvider GetBoundedContextServices()
         {
             var services = new ServiceCollection();
 
-            services.AddCommandHandler(options => options.Bind(configuration.GetSection("CommandHandler")));
-
             services.AddLogging(builder => builder.AddDebug());
+
+            //transforma un command a evento
+            services.AddAzureServiceBusCommandReceiver(
+                builder =>
+                {
+                    builder.AddCommandHandler<CreateWebUser, CreateWebUserHandler>();
+                    builder.AddCommandHandler<UpdateWebUser, UpdateWebUserHandler>();
+                    builder.AddCommandHandler<DeleteWebUser, DeleteWebUserHandler>();
+                },
+                new Dictionary<string, Action<CommandBusOptions>>
+                {
+                    ["Core"] = options => configuration.GetSection("CommandHandler:Receiver").Bind(options),
+                });
+
+            //suscripcion a eventos
+            /*services.AddAzureServiceBusEventSubscriber(
+                builder =>
+                {
+                    builder.AddDenormalizer<Pdc.Integration.Denormalization.Customer, CustomerDenormalizer>();
+                    builder.AddDenormalizer<Pdc.Integration.Denormalization.CustomerDetail, CustomerDetailDenormalizer>();
+                },
+                new Dictionary<string, Action<EventBusOptions>>
+                {
+                    ["Core"] = options => configuration.GetSection("Denormalization:Subscribers:0").Bind(options),
+                });*/
+
             services.AddAggregateRootFactory();
-            services.AddUnitOfWork(options => { });
-            services.AddDocumentDBPersistence(options => options.Bind(configuration.GetSection("DocumentDBPersistence")));
-            services.AddRedisDistributedLocks(options => options.Bind(configuration.GetSection("RedisDistributedLocks")));
+            services.AddUnitOfWork();
+            services.AddDocumentDBPersistence(options => configuration.GetSection("DocumentDBPersistence").Bind(options));
+            services.AddRedisDistributedLocks(options => configuration.GetSection("RedisDistributedLocks").Bind(options));
             services.AddDistributedRedisCache(options =>
             {
                 options.Configuration = configuration["DistributedRedisCache:Configuration"];
                 options.InstanceName = configuration["DistributedRedisCache:InstanceName"];
             });
-            services.AddAzureServiceBusEventPublisher(options => options.Bind(configuration.GetSection("BoundedContext:Publisher")));
 
-            services.AddCommandHandler<CreateWebUser, CreateWebUserHandler>();
-            services.AddCommandHandler<UpdateWebUser, UpdateWebUserHandler>();
-            services.AddCommandHandler<DeleteWebUser, DeleteWebUserHandler>();
+            //services.AddDbContext<PurchaseOrdersDbContext>(options => options.UseSqlite(connection));
+
+            services.AddAzureServiceBusCommandSender(options => configuration.GetSection("ProcessManager:Sender").Bind(options));
+            services.AddAzureServiceBusEventPublisher(options => configuration.GetSection("BoundedContext:Publisher").Bind(options));
+
+            services.AddHostedService<HostedService>();
 
             return services.BuildServiceProvider();
-        }
-
-        //temporal
-        private static async Task ExecuteBoundedContextAsync(IServiceProvider services, CancellationToken cancellationToken)
-        {
-            using (var scope = services.CreateScope())
-            {
-                var boundedContext = services.GetRequiredService<IHostedService>();
-
-                try
-                {
-                    await boundedContext.StartAsync(default);
-
-                    await Task.Delay(
-                        Timeout.InfiniteTimeSpan,
-                        cancellationToken);
-                }
-                catch (TaskCanceledException)
-                {
-
-                }
-                finally
-                {
-                    await boundedContext.StopAsync(default);
-                }
-            }
         }
     }
 }

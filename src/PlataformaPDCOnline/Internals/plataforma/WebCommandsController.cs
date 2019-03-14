@@ -4,6 +4,7 @@ using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace PlataformaPDCOnline.Internals.plataforma
 {
@@ -38,11 +39,11 @@ namespace PlataformaPDCOnline.Internals.plataforma
         }
 
         //temporal
-        public static void EndSender()
+        public async static void EndSender()
         {
             if(Sender != null)
             {
-                Sender.end();
+                await Sender.EndJobAsync();
             }
         }
 
@@ -60,7 +61,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
         }
 
         //ejecuta el search para cada fila recuperada de la base de datos, antes de esto, debemos encontrar el search correspondiente para el command que toca, para eso usamos reflexion
-        public void RunDetector()
+        public async Task RunDetector()
         {
             Type[] types = Assembly.GetExecutingAssembly().GetTypes(); //recuperamos todos los tipos
 
@@ -80,7 +81,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
                         foreach (Dictionary<string, object> row in table)
                         {
                             Command commands = (Command)method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
-                            Sender.sendAsync(commands);                                                                                   //ConsultasPreparadas.Singelton().SendCommands(commands); //nos devuelve los commands, los cuales enviaremos
+                            await Sender.SendCommandAsync(commands);                                                                                  //ConsultasPreparadas.Singelton().SendCommands(commands); //nos devuelve los commands, los cuales enviaremos
                         }
                     }
                     else throw new MyNoImplementedException("Se ha encontrado la clase " + t.Name + ", pero no implementa ISearcher."); //ok
