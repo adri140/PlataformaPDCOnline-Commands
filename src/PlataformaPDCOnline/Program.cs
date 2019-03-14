@@ -19,14 +19,12 @@ namespace PlataformaPDCOnline
             StartFunction();
             //sendMeTest();
 
-            Console.WriteLine("presiona Intro para salir....");
-            Console.ReadLine();
+            while(!end)
+            {
+                Thread.Sleep(10000);
+            }
 
             WebCommandsController.EndSender();
-
-            //send.EndJobAsync(); ;
-
-            //WebCommandsController.EndSender(); //temporal
         }
 
         //inicia el programa, cargando todos los commands que hay en la base de datos informix

@@ -80,8 +80,8 @@ namespace PlataformaPDCOnline.Internals.plataforma
 
                         foreach (Dictionary<string, object> row in table)
                         {
-                            Command commands = (Command)method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
-                            await Sender.SendCommandAsync(commands);                                                                                  //ConsultasPreparadas.Singelton().SendCommands(commands); //nos devuelve los commands, los cuales enviaremos
+                            Command command = (Command)method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
+                            await Sender.SendCommandAsync(command);
                         }
                     }
                     else throw new MyNoImplementedException("Se ha encontrado la clase " + t.Name + ", pero no implementa ISearcher."); //ok

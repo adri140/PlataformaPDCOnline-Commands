@@ -105,7 +105,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             services.AddLogging(builder => builder.AddDebug());
 
             //transforma un command a evento
-            services.AddAzureServiceBusCommandReceiver(
+            /*services.AddAzureServiceBusCommandReceiver(
                 builder =>
                 {
                     builder.AddCommandHandler<CreateWebUser, CreateWebUserHandler>();
@@ -115,7 +115,11 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
                 new Dictionary<string, Action<CommandBusOptions>>
                 {
                     ["Core"] = options => configuration.GetSection("CommandHandler:Receiver").Bind(options),
-                });
+                });*/
+
+            //enviar un command
+            services.AddAzureServiceBusCommandSender(options => configuration.GetSection("ProcessManager:Sender").Bind(options));
+            //fin command sender
 
             //suscripcion a eventos
             /*services.AddAzureServiceBusEventSubscriber(
@@ -129,7 +133,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
                     ["Core"] = options => configuration.GetSection("Denormalization:Subscribers:0").Bind(options),
                 });*/
 
-            services.AddAggregateRootFactory();
+            /*services.AddAggregateRootFactory();
             services.AddUnitOfWork();
             services.AddDocumentDBPersistence(options => configuration.GetSection("DocumentDBPersistence").Bind(options));
             services.AddRedisDistributedLocks(options => configuration.GetSection("RedisDistributedLocks").Bind(options));
@@ -137,13 +141,14 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             {
                 options.Configuration = configuration["DistributedRedisCache:Configuration"];
                 options.InstanceName = configuration["DistributedRedisCache:InstanceName"];
-            });
+            });*/
 
             //services.AddDbContext<PurchaseOrdersDbContext>(options => options.UseSqlite(connection));
 
-            services.AddAzureServiceBusCommandSender(options => configuration.GetSection("ProcessManager:Sender").Bind(options));
-            services.AddAzureServiceBusEventPublisher(options => configuration.GetSection("BoundedContext:Publisher").Bind(options));
 
+            //services.AddAzureServiceBusEventPublisher(options => configuration.GetSection("BoundedContext:Publisher").Bind(options));
+
+            //esto es necesario siempre, no lo toques o moriras
             services.AddHostedService<HostedService>();
 
             return services.BuildServiceProvider();
