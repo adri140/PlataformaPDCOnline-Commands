@@ -21,7 +21,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
     {
         
         private readonly IConfiguration configuration;
-        private IServiceProvider services;
+        private readonly IServiceProvider services;
         private IServiceScope scope;
         private IHostedService boundedContext;
         private ICommandSender sender;
@@ -31,17 +31,16 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             configuration = GetConfiguration();
             services = GetBoundedContextServices();
 
-            this.InicializeAsync();
+            InicializeAsync();
         }
 
         private async Task InicializeAsync()
         {
-            scope = services.CreateScope();
-            using (scope)
+            using (scope = services.CreateScope())
             {
                 boundedContext = services.GetRequiredService<IHostedService>();
 
-                await boundedContext.StartAsync(default);
+                await boundedContext.StartAsync(default); //iniciamos todos los servicios
 
                 sender = services.GetRequiredService<ICommandSender>();
             }
@@ -54,7 +53,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
                 using (scope)
                 {
                     await sender.SendAsync(command);
-                    Console.WriteLine("enviado command");
+                    Console.WriteLine("enviando command");
                 }
             }
         }
@@ -105,7 +104,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             services.AddLogging(builder => builder.AddDebug());
 
             //transforma un command a evento
-            /*services.AddAzureServiceBusCommandReceiver(
+            services.AddAzureServiceBusCommandReceiver(
                 builder =>
                 {
                     builder.AddCommandHandler<CreateWebUser, CreateWebUserHandler>();
@@ -115,7 +114,11 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
                 new Dictionary<string, Action<CommandBusOptions>>
                 {
                     ["Core"] = options => configuration.GetSection("CommandHandler:Receiver").Bind(options),
-                });*/
+                });
+
+            //public el evento
+            //services.AddAzureServiceBusEventPublisher(options => configuration.GetSection("BoundedContext:Publisher").Bind(options));
+            //fin evento
 
             //enviar un command
             services.AddAzureServiceBusCommandSender(options => configuration.GetSection("ProcessManager:Sender").Bind(options));
@@ -133,10 +136,10 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
                     ["Core"] = options => configuration.GetSection("Denormalization:Subscribers:0").Bind(options),
                 });*/
 
-            /*services.AddAggregateRootFactory();
+            services.AddAggregateRootFactory();
             services.AddUnitOfWork();
-            services.AddDocumentDBPersistence(options => configuration.GetSection("DocumentDBPersistence").Bind(options));
-            services.AddRedisDistributedLocks(options => configuration.GetSection("RedisDistributedLocks").Bind(options));
+            //services.AddDocumentDBPersistence(options => configuration.GetSection("DocumentDBPersistence").Bind(options));
+            /*services.AddRedisDistributedLocks(options => configuration.GetSection("RedisDistributedLocks").Bind(options));
             services.AddDistributedRedisCache(options =>
             {
                 options.Configuration = configuration["DistributedRedisCache:Configuration"];
@@ -144,9 +147,6 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             });*/
 
             //services.AddDbContext<PurchaseOrdersDbContext>(options => options.UseSqlite(connection));
-
-
-            //services.AddAzureServiceBusEventPublisher(options => configuration.GetSection("BoundedContext:Publisher").Bind(options));
 
             //esto es necesario siempre, no lo toques o moriras
             services.AddHostedService<HostedService>();

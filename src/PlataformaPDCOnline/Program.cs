@@ -22,8 +22,20 @@ namespace PlataformaPDCOnline
             {
                 Thread.Sleep(10000);
             }
+            try
+            {
+                WebCommandsController.EndSender();
+            }
+            catch(NullReferenceException ne)
+            {
+                Console.WriteLine(ne.Message);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
 
-            WebCommandsController.EndSender();
+            Console.ReadLine();
         }
 
         //inicia el programa, cargando todos los commands que hay en la base de datos informix
@@ -51,6 +63,10 @@ namespace PlataformaPDCOnline
                 catch (MyNoImplementedException ni)
                 {
                     Console.WriteLine(ni.Message);
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e.Message);
                 }
             }
             end = true;

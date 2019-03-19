@@ -41,9 +41,16 @@ namespace PlataformaPDCOnline.Internals.plataforma
         //temporal
         public async static void EndSender()
         {
-            if(Sender != null)
+            try
             {
-                await Sender.EndJobAsync();
+                if (Sender != null)
+                {
+                    await Sender.EndJobAsync();
+                }
+            }
+            catch(NullReferenceException ne)
+            {
+                throw new Exception(ne.Message);
             }
         }
 
@@ -63,29 +70,36 @@ namespace PlataformaPDCOnline.Internals.plataforma
         //ejecuta el search para cada fila recuperada de la base de datos, antes de esto, debemos encontrar el search correspondiente para el command que toca, para eso usamos reflexion
         public async Task RunDetector()
         {
-            Type[] types = Assembly.GetExecutingAssembly().GetTypes(); //recuperamos todos los tipos
-
-            //por cada typo 'clase'
-            foreach (Type t in types)
+            try
             {
-                if (t.Name == "Search" + this.CommandName) //si el nombre de la clase es igual a 'Search' + 'el nombre del controlador'
+                Type[] types = Assembly.GetExecutingAssembly().GetTypes(); //recuperamos todos los tipos
+
+                //por cada typo 'clase'
+                foreach (Type t in types)
                 {
-                    object search = Activator.CreateInstance(t); //creamos una instancia de esta clase
-
-                    if (search is ISearcher) //si la instancia implementa ISearcher y SearcherChangesController
+                    if (t.Name == "Search" + this.CommandName) //si el nombre de la clase es igual a 'Search' + 'el nombre del controlador'
                     {
-                        List<Dictionary<string, object>> table = ConsultasPreparadas.Singelton().GetRowData(this.SqlCommand);
+                        object search = Activator.CreateInstance(t); //creamos una instancia de esta clase
 
-                        MethodInfo method = search.GetType().GetMethod("RunSearcher");
-
-                        foreach (Dictionary<string, object> row in table)
+                        if (search is ISearcher) //si la instancia implementa ISearcher y SearcherChangesController
                         {
-                            Command command = (Command)method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
-                            await Sender.SendCommandAsync(command);
+                            List<Dictionary<string, object>> table = ConsultasPreparadas.Singelton().GetRowData(this.SqlCommand);
+
+                            MethodInfo method = search.GetType().GetMethod("RunSearcher");
+
+                            foreach (Dictionary<string, object> row in table)
+                            {
+                                Command command = (Command)method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
+                                await Sender.SendCommandAsync(command);
+                            }
                         }
+                        else throw new MyNoImplementedException("Se ha encontrado la clase " + t.Name + ", pero no implementa ISearcher."); //ok
                     }
-                    else throw new MyNoImplementedException("Se ha encontrado la clase " + t.Name + ", pero no implementa ISearcher."); //ok
                 }
+            }
+            catch(NullReferenceException ne)
+            {
+                throw new Exception(ne.Message);
             }
         }
     }
