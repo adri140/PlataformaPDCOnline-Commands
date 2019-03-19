@@ -15,7 +15,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
         public readonly string TableName;
         public readonly string UidTableName;
         public readonly string SqlCommand;
-        private static Sender Sender;
+        private static Sender Sender = null;
 
         /// <summary>
         /// A partir de una fila de la tabla commands, genero este controller, mediante reflexion.
@@ -50,7 +50,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
             }
             catch(NullReferenceException ne)
             {
-                throw new Exception(ne.Message);
+                throw new Exception(ne.ToString());
             }
         }
 
@@ -99,7 +99,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
             }
             catch(NullReferenceException ne)
             {
-                throw new Exception(ne.Message);
+                throw new Exception(ne.ToString());
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿
-
+﻿using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,10 +7,11 @@ using Pdc.Hosting;
 using Pdc.Messaging;
 using Pdc.Messaging.ServiceBus;
 using PlataformaPDCOnline.Editable.pdcOnline.Commands;
+using PlataformaPDCOnline.tmpPruebas.recivirEvent;
+using PlataformaPDCOnline.tmpPruebas.tratarCommand;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
@@ -22,6 +22,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
         
         private readonly IConfiguration configuration;
         private readonly IServiceProvider services;
+        private SqliteConnection connection;
         private IServiceScope scope;
         private IHostedService boundedContext;
         private ICommandSender sender;
@@ -29,6 +30,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
         public Sender()
         {
             configuration = GetConfiguration();
+
             services = GetBoundedContextServices();
 
             InicializeAsync();
@@ -36,8 +38,9 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 
         private async Task InicializeAsync()
         {
-            using (scope = services.CreateScope())
+            using (scope)
             {
+
                 boundedContext = services.GetRequiredService<IHostedService>();
 
                 await boundedContext.StartAsync(default); //iniciamos todos los servicios
@@ -62,7 +65,10 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
         {
             using (scope)
             {
+            if (boundedContext != null)
+            {
                 await boundedContext.StopAsync(default);
+            }
             }
         }
 
@@ -117,7 +123,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
                 });
 
             //public el evento
-            //services.AddAzureServiceBusEventPublisher(options => configuration.GetSection("BoundedContext:Publisher").Bind(options));
+            services.AddAzureServiceBusEventPublisher(options => configuration.GetSection("BoundedContext:Publisher").Bind(options));
             //fin evento
 
             //enviar un command
@@ -125,26 +131,25 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             //fin command sender
 
             //suscripcion a eventos
-            /*services.AddAzureServiceBusEventSubscriber(
+            services.AddAzureServiceBusEventSubscriber(
                 builder =>
                 {
-                    builder.AddDenormalizer<Pdc.Integration.Denormalization.Customer, CustomerDenormalizer>();
-                    builder.AddDenormalizer<Pdc.Integration.Denormalization.CustomerDetail, CustomerDetailDenormalizer>();
+                    builder.AddDenormalizer<tmpPruebas.recivirEvent.WebUser, WebUserDenormalizer>();
                 },
                 new Dictionary<string, Action<EventBusOptions>>
                 {
                     ["Core"] = options => configuration.GetSection("Denormalization:Subscribers:0").Bind(options),
-                });*/
+                });
 
             services.AddAggregateRootFactory();
             services.AddUnitOfWork();
-            //services.AddDocumentDBPersistence(options => configuration.GetSection("DocumentDBPersistence").Bind(options));
-            /*services.AddRedisDistributedLocks(options => configuration.GetSection("RedisDistributedLocks").Bind(options));
+            services.AddDocumentDBPersistence(options => configuration.GetSection("DocumentDBPersistence").Bind(options));
+            services.AddRedisDistributedLocks(options => configuration.GetSection("RedisDistributedLocks").Bind(options));
             services.AddDistributedRedisCache(options =>
             {
                 options.Configuration = configuration["DistributedRedisCache:Configuration"];
                 options.InstanceName = configuration["DistributedRedisCache:InstanceName"];
-            });*/
+            });
 
             //services.AddDbContext<PurchaseOrdersDbContext>(options => options.UseSqlite(connection));
 

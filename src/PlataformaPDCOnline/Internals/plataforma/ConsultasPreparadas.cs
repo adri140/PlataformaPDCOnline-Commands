@@ -52,7 +52,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
             {
                 //Console.WriteLine("abre conexion " + sql);
                 Infx.Database.Connection.Open();
-                result = this.ExecuteCommadForSelect(commandOdbc);
+                result = Infx.ExecuteSelectCommand(commandOdbc);
                 //Console.WriteLine("cierra conexion " + sql);
                 Infx.Database.Connection.Close();
             }
@@ -75,7 +75,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
             {
                 //Console.WriteLine("abre conexion " + sql);
                 Infx.Database.Connection.Open();
-                result = this.ExecuteCommadForSelect(commandOdbc);
+                result = Infx.ExecuteSelectCommand(commandOdbc);
                 //Console.WriteLine("cierra conexion " + sql);
                 Infx.Database.Connection.Close();
             }
@@ -86,32 +86,6 @@ namespace PlataformaPDCOnline.Internals.plataforma
                 ErrorDBLog.Write("Error: " + e.ToString());
             }
             return result;
-        }
-
-        //ejecuta un command de ODBCCommand, que sea un select y te devuelve una lista de diccionarios
-        private List<Dictionary<string, object>> ExecuteCommadForSelect(OdbcCommand command)
-        {
-            List<Dictionary<string, object>> tablaResult = new List<Dictionary<string, object>>();
-            try
-            {
-                OdbcDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    Dictionary<string, object> rowResult = new Dictionary<string, object>();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        rowResult.Add(reader.GetName(i), reader.GetValue(i));
-                    }
-                    tablaResult.Add(rowResult);
-                }
-                
-            }
-            catch (MyOdbcException e)
-            {
-                throw new MyOdbcException("Error consultas preparadas" + e.ToString());
-            }
-            return tablaResult;
         }
 
         /// <summary>

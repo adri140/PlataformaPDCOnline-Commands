@@ -36,6 +36,15 @@ namespace PlataformaPDCOnline
             }
 
             Console.ReadLine();
+
+            try
+            {
+                Thread.Sleep(5000);
+            }
+            catch (Exception ne)
+            {
+                Console.WriteLine(ne.Message);
+            }
         }
 
         //inicia el programa, cargando todos los commands que hay en la base de datos informix

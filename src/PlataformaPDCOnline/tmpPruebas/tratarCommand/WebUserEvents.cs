@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
+namespace PlataformaPDCOnline.tmpPruebas.tratarCommand
 {
     //clases temporales
     public class WebUserCreated : Event

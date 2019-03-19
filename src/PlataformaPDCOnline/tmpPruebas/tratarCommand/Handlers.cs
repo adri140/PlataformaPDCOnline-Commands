@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
+namespace PlataformaPDCOnline.tmpPruebas.tratarCommand
 {
     //clases temporales
     public class CreateWebUserHandler : ICommandHandler<CreateWebUser>

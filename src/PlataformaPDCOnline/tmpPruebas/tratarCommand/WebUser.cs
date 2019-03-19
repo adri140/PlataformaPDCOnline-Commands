@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
+namespace PlataformaPDCOnline.tmpPruebas.tratarCommand
 {
     //clase temporal
     class WebUser : AggregateRoot, ISaga<WebUserCreated>, ISaga<WebUserDeleted>, ISaga<WebUserUpdated>
