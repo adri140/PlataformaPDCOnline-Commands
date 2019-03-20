@@ -10,7 +10,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
     {
         public Command RunSearcher(Dictionary<string, object> row, WebCommandsController controller) //obligatorio tanto por la interface como que es el metodo que se ejecutara para buscar y crear el command
         {
-            Command commands = null;
+            CreateWebAccessGroup commands = null;
 
             if (row.GetValueOrDefault("accessgroupid").ToString().Equals(""))
             {

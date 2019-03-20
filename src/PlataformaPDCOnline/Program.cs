@@ -18,10 +18,8 @@ namespace PlataformaPDCOnline
         {
             StartFunction();
 
-            while(!end)
-            {
-                Thread.Sleep(10000);
-            }
+            while(!end) Thread.Sleep(10000);
+
             try
             {
                 WebCommandsController.EndSender();
@@ -34,17 +32,8 @@ namespace PlataformaPDCOnline
             {
                 Console.WriteLine(e.Message);
             }
-
+            Console.WriteLine("terminado el envio de commands");
             Console.ReadLine();
-
-            try
-            {
-                Thread.Sleep(5000);
-            }
-            catch (Exception ne)
-            {
-                Console.WriteLine(ne.Message);
-            }
         }
 
         //inicia el programa, cargando todos los commands que hay en la base de datos informix
@@ -79,7 +68,6 @@ namespace PlataformaPDCOnline
                 }
             }
             end = true;
-            Console.WriteLine("terminado el envio de commands");
         }
     }
 }

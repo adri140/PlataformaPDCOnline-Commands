@@ -10,7 +10,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
     {
         public Command RunSearcher(Dictionary<string, object> row, WebCommandsController controller) //obligatorio tanto por la interface como que es el metodo que se ejecutara para buscar y crear el command
         {
-            Command commands = null;
+            CreateWebUser commands = null;
 
             if (row.GetValueOrDefault("userid").ToString().Equals(""))
             {
@@ -43,7 +43,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
     {
         public Command RunSearcher(Dictionary<string, object> row, WebCommandsController controller)
         {
-            Command commands = null;
+            UpdateWebUser commands = null;
             Console.WriteLine("Running searcher Update");
 
             commands = new UpdateWebUser(row.GetValueOrDefault("userid").ToString()) { username = row.GetValueOrDefault("username").ToString() };
@@ -60,7 +60,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
     {
         public Command RunSearcher(Dictionary<string, object> row, WebCommandsController controller)
         {
-            Command commands = null;
+            DeleteWebUser commands = null;
 
             //lo sullo seria comprovar que en la otra base de datos no se ha eliminado, si se ha eliminado se quitaria el flag de changevalue a -1
             

@@ -131,7 +131,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             //fin command sender
 
             //suscripcion a eventos
-            services.AddAzureServiceBusEventSubscriber(
+            /*services.AddAzureServiceBusEventSubscriber(
                 builder =>
                 {
                     builder.AddDenormalizer<tmpPruebas.recivirEvent.WebUser, WebUserDenormalizer>();
@@ -139,11 +139,13 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
                 new Dictionary<string, Action<EventBusOptions>>
                 {
                     ["Core"] = options => configuration.GetSection("Denormalization:Subscribers:0").Bind(options),
-                });
+                });*/
+
+            //services.AddDbContext<PurchaseOrdersDbContext>(options => options.UseSqlite(connection));
+            //services.AddDocumentDBPersistence(options => configuration.GetSection("DocumentDBPersistence").Bind(options));
 
             services.AddAggregateRootFactory();
             services.AddUnitOfWork();
-            services.AddDocumentDBPersistence(options => configuration.GetSection("DocumentDBPersistence").Bind(options));
             services.AddRedisDistributedLocks(options => configuration.GetSection("RedisDistributedLocks").Bind(options));
             services.AddDistributedRedisCache(options =>
             {
@@ -151,7 +153,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
                 options.InstanceName = configuration["DistributedRedisCache:InstanceName"];
             });
 
-            //services.AddDbContext<PurchaseOrdersDbContext>(options => options.UseSqlite(connection));
+            
 
             //esto es necesario siempre, no lo toques o moriras
             services.AddHostedService<HostedService>();

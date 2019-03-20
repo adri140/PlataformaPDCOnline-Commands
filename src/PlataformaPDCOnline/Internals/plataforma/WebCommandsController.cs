@@ -1,8 +1,10 @@
 ﻿using OdbcDatabase.excepciones;
 using Pdc.Messaging;
+using PlataformaPDCOnline.Editable.pdcOnline.Commands;
 using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -25,7 +27,6 @@ namespace PlataformaPDCOnline.Internals.plataforma
         {
             this.TableName = controller.GetValueOrDefault("tablename").ToString();
             this.CommandName = controller.GetValueOrDefault("commandname").ToString();
-            //Console.WriteLine("nombre: " + this.CommandName +  " indice de create: " + this.CommandName.IndexOf("Create"));
             this.UidTableName = controller.GetValueOrDefault("uidtablename").ToString();
             this.SqlCommand = controller.GetValueOrDefault("sqlcommand").ToString();
             this.CommandParameters = new List<string>();
@@ -72,32 +73,26 @@ namespace PlataformaPDCOnline.Internals.plataforma
         {
             try
             {
-                Type[] types = Assembly.GetExecutingAssembly().GetTypes(); //recuperamos todos los tipos
-
-                //por cada typo 'clase'
-                foreach (Type t in types)
+                Type searcherT = Type.GetType("PlataformaPDCOnline.Editable.Searchers.Search" + this.CommandName); //buscamos el tipo
+                //Type commandT = Type.GetType("PlataformaPDCOnline.Editable.pdcOnline.Commands." + this.CommandName);
+                
+                if (searcherT.GetInterfaces().Contains(typeof(ISearcher))) //si la instancia implementa ISearcher y SearcherChangesController
                 {
-                    if (t.Name == "Search" + this.CommandName) //si el nombre de la clase es igual a 'Search' + 'el nombre del controlador'
+                    object search = searcherT == null ? throw new NullReferenceException("No se ha encontrado el typo.") : Activator.CreateInstance(searcherT); //creamos una instancia de esta clase
+
+                    List<Dictionary<string, object>> table = ConsultasPreparadas.Singelton().GetRowData(this.SqlCommand);
+
+                    MethodInfo method = search.GetType().GetMethod("RunSearcher");
+
+                    foreach (Dictionary<string, object> row in table)
                     {
-                        object search = Activator.CreateInstance(t); //creamos una instancia de esta clase
-
-                        if (search is ISearcher) //si la instancia implementa ISearcher y SearcherChangesController
-                        {
-                            List<Dictionary<string, object>> table = ConsultasPreparadas.Singelton().GetRowData(this.SqlCommand);
-
-                            MethodInfo method = search.GetType().GetMethod("RunSearcher");
-
-                            foreach (Dictionary<string, object> row in table)
-                            {
-                                Command command = (Command)method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
-                                await Sender.SendCommandAsync(command);
-                            }
-                        }
-                        else throw new MyNoImplementedException("Se ha encontrado la clase " + t.Name + ", pero no implementa ISearcher."); //ok
+                        //Command commandSend = ; //invocamos el methodo con la instancia searcher y le pasamos los parametros
+                        await Sender.SendCommandAsync((Command)method.Invoke(search, new object[] { row, this }));
                     }
                 }
+                else throw new MyNoImplementedException("Se ha encontrado la clase " + searcherT.Name + ", pero no implementa ISearcher."); //ok
             }
-            catch(NullReferenceException ne)
+            catch (NullReferenceException ne)
             {
                 throw new Exception(ne.ToString());
             }

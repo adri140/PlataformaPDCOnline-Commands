@@ -6,7 +6,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
     /// <summary>
     /// Interface que obliga a implementar el method RunSearcher, el cual realizara la busqueda de cambios en ambas base de datos.
     /// </summary>
-    interface ISearcher
+    interface ISearcher//<T> where T : Command
     {
         /// <summary>
         /// Ejecuta la busqueda de cambios en las dos base de datos, segun el command seleccionado, el resultado de este es un command, el qual sera enviado posteriormente.
