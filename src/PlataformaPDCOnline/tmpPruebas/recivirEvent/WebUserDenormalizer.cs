@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace PlataformaPDCOnline.tmpPruebas.recivirEvent
 {
-    public class WebUserDenormalizer : PlataformaDenormalizer<WebUser>, IEventHandler<WebUserCreated>, IEventHandler<WebUserUpdated>, IEventHandler<WebUserDeleted>
+    public class WebUserDenormalizer : IEventHandler<WebUserCreated>, IEventHandler<WebUserUpdated>, IEventHandler<WebUserDeleted>
     {
         //private static WebEventController WebUserCreatedController = null;
         //private static WebEventController WebUserUpdatedController = null;

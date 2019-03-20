@@ -19,7 +19,9 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
     //contiene todos los datos para poder crear el sender, usamos singelton para que solo se pueda instanciar una vez
     public class Sender
     {
-        
+
+        private static Sender CommandsSender;
+
         private readonly IConfiguration configuration;
         private readonly IServiceProvider services;
         private SqliteConnection connection;
