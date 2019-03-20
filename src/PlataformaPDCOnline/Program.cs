@@ -56,7 +56,7 @@ namespace PlataformaPDCOnline
                 {
                     WebCommandsController controller = new WebCommandsController(row); //generamos un webController a partir de la informacion de este controller
                     Console.WriteLine("Prepare Detector: preparando trabajo para: " + controller.CommandName);
-                    await controller.RunDetector(); //lanzamos el controller
+                    controller.RunDetector(); //lanzamos el controller
                 }
                 catch (MyNoImplementedException ni)
                 {

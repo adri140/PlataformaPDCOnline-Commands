@@ -1,12 +1,10 @@
 ﻿using OdbcDatabase.excepciones;
 using Pdc.Messaging;
-using PlataformaPDCOnline.Editable.pdcOnline.Commands;
 using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace PlataformaPDCOnline.Internals.plataforma
 {
@@ -29,14 +27,10 @@ namespace PlataformaPDCOnline.Internals.plataforma
             this.CommandName = controller.GetValueOrDefault("commandname").ToString();
             this.UidTableName = controller.GetValueOrDefault("uidtablename").ToString();
             this.SqlCommand = controller.GetValueOrDefault("sqlcommand").ToString();
-            this.CommandParameters = new List<string>();
-
-            foreach (string parameter in controller.GetValueOrDefault("commandparameters").ToString().Split(","))
-            {
-                this.CommandParameters.Add(parameter.Trim());
-            }
-
+            this.CommandParameters = new List<string>(controller.GetValueOrDefault("commandparameters").ToString().Split(",", StringSplitOptions.RemoveEmptyEntries));
+           
             if (Sender == null) Sender = new Sender();
+            Console.WriteLine(this.ToString());
         }
 
         //temporal
@@ -69,13 +63,13 @@ namespace PlataformaPDCOnline.Internals.plataforma
         }
 
         //ejecuta el search para cada fila recuperada de la base de datos, antes de esto, debemos encontrar el search correspondiente para el command que toca, para eso usamos reflexion
-        public async Task RunDetector()
+        public async void RunDetector()
         {
             try
             {
                 Type searcherT = Type.GetType("PlataformaPDCOnline.Editable.Searchers.Search" + this.CommandName); //buscamos el tipo
-                //Type commandT = Type.GetType("PlataformaPDCOnline.Editable.pdcOnline.Commands." + this.CommandName);
-                
+                                                                                                                   //Type commandT = Type.GetType("PlataformaPDCOnline.Editable.pdcOnline.Commands." + this.CommandName);
+
                 if (searcherT.GetInterfaces().Contains(typeof(ISearcher))) //si la instancia implementa ISearcher y SearcherChangesController
                 {
                     object search = searcherT == null ? throw new NullReferenceException("No se ha encontrado el typo.") : Activator.CreateInstance(searcherT); //creamos una instancia de esta clase
