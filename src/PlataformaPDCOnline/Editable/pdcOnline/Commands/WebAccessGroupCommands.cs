@@ -9,6 +9,6 @@ namespace PlataformaPDCOnline.Editable.pdcOnline.Commands
 
         }
 
-        public string accessgroupname { get; set; }
+        public string Accessgroupname { get; set; }
     }
 }

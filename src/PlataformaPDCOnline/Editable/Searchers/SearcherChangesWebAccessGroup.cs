@@ -20,7 +20,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
                 if (ConsultasPreparadas.Singelton().UpdateTableForGUID(controller, row, uid, "accessgroupname") == 1) //la consulta ja se ocupa de actualizar-lo y nos devuelve el numero de filas actualizadas
                 {
                     Console.WriteLine("Preparando el command CreateWebAccessGroup");
-                    commands = new CreateWebAccessGroup(uid) { accessgroupname = row.GetValueOrDefault("accessgroupname").ToString() };
+                    commands = new CreateWebAccessGroup(uid) { Accessgroupname = row.GetValueOrDefault("accessgroupname").ToString() };
                 }
             }
             else
@@ -30,7 +30,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
                 if (!exist)
                 {
                     Console.WriteLine("Re-enviando command CreateWebAccessGroup");
-                    commands = new CreateWebAccessGroup(row.GetValueOrDefault("accessgroupid").ToString()) { accessgroupname = row.GetValueOrDefault("accessgroupname").ToString() };
+                    commands = new CreateWebAccessGroup(row.GetValueOrDefault("accessgroupid").ToString()) { Accessgroupname = row.GetValueOrDefault("accessgroupname").ToString() };
                 }
             }
 

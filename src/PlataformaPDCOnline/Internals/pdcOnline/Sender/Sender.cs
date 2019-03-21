@@ -5,10 +5,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pdc.Hosting;
 using Pdc.Messaging;
-using Pdc.Messaging.ServiceBus;
-using PlataformaPDCOnline.Editable.pdcOnline.Commands;
-using PlataformaPDCOnline.tmpPruebas.recivirEvent;
-using PlataformaPDCOnline.tmpPruebas.tratarCommand;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -111,51 +107,9 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 
             services.AddLogging(builder => builder.AddDebug());
 
-            //transforma un command a evento
-            services.AddAzureServiceBusCommandReceiver(
-                builder =>
-                {
-                    builder.AddCommandHandler<CreateWebUser, CreateWebUserHandler>();
-                    builder.AddCommandHandler<UpdateWebUser, UpdateWebUserHandler>();
-                    builder.AddCommandHandler<DeleteWebUser, DeleteWebUserHandler>();
-                },
-                new Dictionary<string, Action<CommandBusOptions>>
-                {
-                    ["Core"] = options => configuration.GetSection("CommandHandler:Receiver").Bind(options),
-                });
-
-            //public el evento
-            services.AddAzureServiceBusEventPublisher(options => configuration.GetSection("BoundedContext:Publisher").Bind(options));
-            //fin evento
-
             //enviar un command
             services.AddAzureServiceBusCommandSender(options => configuration.GetSection("ProcessManager:Sender").Bind(options));
             //fin command sender
-
-            //suscripcion a eventos
-            /*services.AddAzureServiceBusEventSubscriber(
-                builder =>
-                {
-                    builder.AddDenormalizer<tmpPruebas.recivirEvent.WebUser, WebUserDenormalizer>();
-                },
-                new Dictionary<string, Action<EventBusOptions>>
-                {
-                    ["Core"] = options => configuration.GetSection("Denormalization:Subscribers:0").Bind(options),
-                });*/
-
-            //services.AddDbContext<PurchaseOrdersDbContext>(options => options.UseSqlite(connection));
-            //services.AddDocumentDBPersistence(options => configuration.GetSection("DocumentDBPersistence").Bind(options));
-
-            services.AddAggregateRootFactory();
-            services.AddUnitOfWork();
-            services.AddRedisDistributedLocks(options => configuration.GetSection("RedisDistributedLocks").Bind(options));
-            services.AddDistributedRedisCache(options =>
-            {
-                options.Configuration = configuration["DistributedRedisCache:Configuration"];
-                options.InstanceName = configuration["DistributedRedisCache:InstanceName"];
-            });
-
-            
 
             //esto es necesario siempre, no lo toques o moriras
             services.AddHostedService<HostedService>();

@@ -20,7 +20,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
                 if (ConsultasPreparadas.Singelton().UpdateTableForGUID(controller, row, uid, "usercode") == 1)
                 {
                     Console.WriteLine("Preparando el command CreateWebUser");
-                    commands = new CreateWebUser(uid) { username = row.GetValueOrDefault("username").ToString(), usercode = row.GetValueOrDefault("usercode").ToString() };
+                    commands = new CreateWebUser(uid) { Username = row.GetValueOrDefault("username").ToString(), Usercode = row.GetValueOrDefault("usercode").ToString() };
                 }
             }
             else
@@ -31,7 +31,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
                 if (!exist)
                 {
                     Console.WriteLine("Re-enviando command CreateWebUser");
-                    commands = new CreateWebUser(row.GetValueOrDefault("userid").ToString()) { username = row.GetValueOrDefault("username").ToString(), usercode = row.GetValueOrDefault("usercode").ToString() };
+                    commands = new CreateWebUser(row.GetValueOrDefault("userid").ToString()) { Username = row.GetValueOrDefault("username").ToString(), usercode = row.GetValueOrDefault("usercode").ToString() };
                 }
             }
 

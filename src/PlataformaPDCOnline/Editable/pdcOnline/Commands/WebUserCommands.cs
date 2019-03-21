@@ -9,8 +9,8 @@ namespace PlataformaPDCOnline.Editable.pdcOnline.Commands
 
         }
 
-        public string username { get; set; }
-        public string usercode { set; get; }
+        public string Username { get; set; }
+        public string Usercode { set; get; }
     }
 
     public class UpdateWebUser : Command
@@ -20,7 +20,7 @@ namespace PlataformaPDCOnline.Editable.pdcOnline.Commands
 
         }
 
-        public string username { set; get; }
+        public string Username { set; get; }
     }
 
     public class DeleteWebUser : Command
