@@ -30,7 +30,6 @@ namespace PlataformaPDCOnline.Internals.plataforma
             this.CommandParameters = new List<string>(controller.GetValueOrDefault("commandparameters").ToString().Split(",", StringSplitOptions.RemoveEmptyEntries));
            
             if (Sender == null) Sender = new Sender();
-            Console.WriteLine(this.ToString());
         }
 
         //temporal

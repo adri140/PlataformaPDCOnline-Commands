@@ -31,7 +31,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
                 if (!exist)
                 {
                     Console.WriteLine("Re-enviando command CreateWebUser");
-                    commands = new CreateWebUser(row.GetValueOrDefault("userid").ToString()) { Username = row.GetValueOrDefault("username").ToString(), usercode = row.GetValueOrDefault("usercode").ToString() };
+                    commands = new CreateWebUser(row.GetValueOrDefault("userid").ToString()) { Username = row.GetValueOrDefault("username").ToString(), Usercode = row.GetValueOrDefault("usercode").ToString() };
                 }
             }
 
@@ -46,7 +46,7 @@ namespace PlataformaPDCOnline.Editable.Searchers
             UpdateWebUser commands = null;
             Console.WriteLine("Running searcher Update");
 
-            commands = new UpdateWebUser(row.GetValueOrDefault("userid").ToString()) { username = row.GetValueOrDefault("username").ToString() };
+            commands = new UpdateWebUser(row.GetValueOrDefault("userid").ToString()) { Username = row.GetValueOrDefault("username").ToString() };
             /*
              * Passos a seguir:
              * buscamos en la otra base de datos el id de nuestra row, si no existe, creamos y enviamos un command de createWebUser.
