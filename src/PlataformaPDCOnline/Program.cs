@@ -48,7 +48,7 @@ namespace PlataformaPDCOnline
         /// Metodo que extrae un command de la base de datos y busca por cada tabla que cambios son de este command
         /// </summary>
         /// <param name="commandsTable">Recibe una lista de diccionarios (string, object) donde string es la columna y el object es el contenido de la fila  en la base de datos</param>
-        private async static void PrepareDetector(List<Dictionary<string, object>> commandsTable)
+        private static void PrepareDetector(List<Dictionary<string, object>> commandsTable)
         {
             foreach (Dictionary<string, object> row in commandsTable)
             {
