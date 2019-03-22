@@ -30,7 +30,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
         }
 
         //te devuelve los datos de la tabla webcommands, imprescindible para trabajar!!
-        public List<Dictionary<string, object>> GetCommands()
+        public List<Dictionary<string, object>> GetWebCommands()
         {
             string sql = "SELECT commandname, commandparameters, tablename, uidtablename, sqlcommand FROM webcommands WHERE active = ? ORDER BY ordercommand ASC";
 
@@ -50,17 +50,14 @@ namespace PlataformaPDCOnline.Internals.plataforma
             List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
             try
             {
-                //Console.WriteLine("abre conexion " + sql);
                 Infx.Database.Connection.Open();
                 result = Infx.ExecuteSelectCommand(commandOdbc);
-                //Console.WriteLine("cierra conexion " + sql);
                 Infx.Database.Connection.Close();
             }
             catch (MyOdbcException e)
             {
-                //Console.WriteLine("cierra conexion Exception " + sql);
                 if (Infx.Database.Connection.State == System.Data.ConnectionState.Open) Infx.Database.Connection.Close();
-                ErrorDBLog.Write("Error: " + e.ToString());
+                ErrorDBLog.Write(e.Message);
             }
             return result;
         }
@@ -73,17 +70,14 @@ namespace PlataformaPDCOnline.Internals.plataforma
             List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
             try
             {
-                //Console.WriteLine("abre conexion " + sql);
                 Infx.Database.Connection.Open();
                 result = Infx.ExecuteSelectCommand(commandOdbc);
-                //Console.WriteLine("cierra conexion " + sql);
                 Infx.Database.Connection.Close();
             }
             catch (Exception e)
             {
-                //Console.WriteLine("cierra conexion Exception " + sql);
                 if (Infx.Database.Connection.State == System.Data.ConnectionState.Open) Infx.Database.Connection.Close();
-                ErrorDBLog.Write("Error: " + e.ToString());
+                ErrorDBLog.Write(e.Message);
             }
             return result;
         }
@@ -119,19 +113,16 @@ namespace PlataformaPDCOnline.Internals.plataforma
             int updateadas = 0;
             try
             {
-                //Console.WriteLine("abre conexion " + sql);
                 Infx.Database.Connection.Open();
 
                 updateadas = commandOdbc.ExecuteNonQuery();
-
-                //Console.WriteLine("cierra conexion " + sql);
+                
                 Infx.Database.Connection.Close();
             }
             catch (MyOdbcException e)
             {
-                //Console.WriteLine("cierra conexion Exception " + sql);
                 if (Infx.Database.Connection.State == System.Data.ConnectionState.Open) Infx.Database.Connection.Close();
-                ErrorDBLog.Write("Error: " + e.ToString());
+                ErrorDBLog.Write(e.Message);
             }
 
             return updateadas;

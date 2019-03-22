@@ -39,7 +39,7 @@ namespace PlataformaPDCOnline
         //inicia el programa, cargando todos los commands que hay en la base de datos informix
         private static void StartFunction()
         {
-            List<Dictionary<string, object>> webCommandsTable = ConsultasPreparadas.Singelton().GetCommands();
+            List<Dictionary<string, object>> webCommandsTable = ConsultasPreparadas.Singelton().GetWebCommands();
 
             if (webCommandsTable.Count > 0) PrepareDetector(webCommandsTable); //si hay commands con los que trabajar, trabajamos
         }
