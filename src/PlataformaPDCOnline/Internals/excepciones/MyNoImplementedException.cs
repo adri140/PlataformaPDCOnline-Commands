@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OdbcDatabase.excepciones
+namespace PlataformaPDCOnline.Internals.excepciones
 {
     public class MyNoImplementedException : Exception
     {

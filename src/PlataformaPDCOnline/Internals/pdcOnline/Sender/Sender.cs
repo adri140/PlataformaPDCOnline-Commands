@@ -20,8 +20,6 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 
         private readonly IConfiguration configuration;
         private readonly IServiceProvider services;
-        private SqliteConnection connection;
-        private IServiceScope scope;
         private IHostedService boundedContext;
         private ICommandSender sender;
 
@@ -36,9 +34,8 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 
         private async Task InicializeAsync()
         {
-            using (scope)
+            using (services.GetRequiredService<IServiceScope>())
             {
-
                 boundedContext = services.GetRequiredService<IHostedService>();
 
                 await boundedContext.StartAsync(default); //iniciamos todos los servicios
@@ -47,26 +44,26 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             }
         }
 
-        public async Task SendCommandAsync(Command command)
+        public async Task SendCommand(Command command)
         {
             if (command != null)
             {
-                using (scope)
+                using (services.GetRequiredService<IServiceScope>())
                 {
                     await sender.SendAsync(command);
-                    Console.WriteLine("enviando command");
+                    //Console.WriteLine("enviando command");
                 }
             }
         }
 
         public async Task EndJobAsync()
         {
-            using (scope)
+            using (services.GetRequiredService<IServiceScope>())
             {
-            if (boundedContext != null)
-            {
-                await boundedContext.StopAsync(default);
-            }
+                if (boundedContext != null)
+                {
+                    await boundedContext.StopAsync(default);
+                }
             }
         }
 
@@ -77,15 +74,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             var c = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
-                    /*{ "DistributedRedisCache:InstanceName", "Cache." },
-                    { "RedisDistributedLocks:InstanceName", "Locks." },
-                    { "DocumentDBPersistence:Database", "Tests" },
-                    { "DocumentDBPersistence:Collection", "Events" },*/
                     { "ProcessManager:Sender:EntityPath", "core-test-commands" }
-                    /*{ "BoundedContext:Publisher:EntityPath", "core-test-events" },*/
-                    /*{ "CommandHandler:Receiver:EntityPath", "core-test-commands" },*/
-                    /*{ "Denormalization:Subscribers:0:EntityPath", "core-test-events" },
-                    { "Denormalization:Subscribers:0:SubscriptionName", "core-test-events-denormalizers" }*/
                 })
                 .AddUserSecrets(assembly, optional: true)
                 .AddEnvironmentVariables()
@@ -105,7 +94,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
         {
             var services = new ServiceCollection();
 
-            services.AddLogging(builder => builder.AddDebug());
+            services.AddLogging(builder => builder.AddDebug()); //local logs
 
             //enviar un command
             services.AddAzureServiceBusCommandSender(options => configuration.GetSection("ProcessManager:Sender").Bind(options));
@@ -113,6 +102,8 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 
             //esto es necesario siempre, no lo toques o moriras
             services.AddHostedService<HostedService>();
+
+            services.AddSingleton(scope => services.BuildServiceProvider().CreateScope());
 
             return services.BuildServiceProvider();
         }

@@ -1,10 +1,12 @@
 ﻿using OdbcDatabase.excepciones;
 using Pdc.Messaging;
+using PlataformaPDCOnline.Internals.excepciones;
 using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace PlataformaPDCOnline.Internals.plataforma
 {
@@ -16,6 +18,8 @@ namespace PlataformaPDCOnline.Internals.plataforma
         public readonly string UidTableName;
         public readonly string SqlCommand;
         private static Sender Sender = null;
+
+        private int CommandsSended = 0;
 
         /// <summary>
         /// A partir de una fila de la tabla commands, genero este controller, mediante reflexion.
@@ -62,12 +66,11 @@ namespace PlataformaPDCOnline.Internals.plataforma
         }
 
         //ejecuta el search para cada fila recuperada de la base de datos, antes de esto, debemos encontrar el search correspondiente para el command que toca, para eso usamos reflexion
-        public async void RunDetector()
+        public int RunDetector()
         {
             try
             {
-                Type searcherT = Type.GetType("PlataformaPDCOnline.Editable.Searchers.Search" + this.CommandName); //buscamos el tipo
-                                                                                                                   //Type commandT = Type.GetType("PlataformaPDCOnline.Editable.pdcOnline.Commands." + this.CommandName);
+                Type searcherT = Type.GetType("PlataformaPDCOnline.Editable.Searchers.Search" + this.CommandName); //buscamos el tipo                                                                                         //Type commandT = Type.GetType("PlataformaPDCOnline.Editable.pdcOnline.Commands." + this.CommandName);
 
                 if (searcherT.GetInterfaces().Contains(typeof(ISearcher))) //si la instancia implementa ISearcher y SearcherChangesController
                 {
@@ -80,7 +83,10 @@ namespace PlataformaPDCOnline.Internals.plataforma
                     foreach (Dictionary<string, object> row in table)
                     {
                         Command commandSend = (Command) method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
-                        await Sender.SendCommandAsync(commandSend);
+                        Task taskk = Sender.SendCommand(commandSend);
+                        taskk.Wait();
+                        if (taskk.IsCompletedSuccessfully) CommandsSended++;
+                        else throw new NoCompletCommandSend("No se a podido enviar el command.");
                     }
                 }
                 else throw new MyNoImplementedException("Se ha encontrado la clase " + searcherT.Name + ", pero no implementa ISearcher."); //ok
@@ -89,6 +95,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
             {
                 throw new Exception(ne.ToString());
             }
+            return CommandsSended;
         }
     }
 }
