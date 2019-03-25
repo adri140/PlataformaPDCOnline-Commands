@@ -17,7 +17,6 @@ namespace PlataformaPDCOnline.Internals.plataforma
         public readonly string TableName;
         public readonly string UidTableName;
         public readonly string SqlCommand;
-        private static Sender Sender = null;
 
         private int CommandsSended = 0;
 
@@ -32,8 +31,6 @@ namespace PlataformaPDCOnline.Internals.plataforma
             this.UidTableName = controller.GetValueOrDefault("uidtablename").ToString();
             this.SqlCommand = controller.GetValueOrDefault("sqlcommand").ToString();
             this.CommandParameters = new List<string>(controller.GetValueOrDefault("commandparameters").ToString().Split(",", StringSplitOptions.RemoveEmptyEntries));
-           
-            if (Sender == null) Sender = new Sender();
         }
 
         //temporal
@@ -41,10 +38,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
         {
             try
             {
-                if (Sender != null)
-                {
-                    await Sender.EndJobAsync();
-                }
+                await Sender.Singelton().EndJobAsync();
             }
             catch(NullReferenceException ne)
             {
@@ -83,7 +77,7 @@ namespace PlataformaPDCOnline.Internals.plataforma
                     foreach (Dictionary<string, object> row in table)
                     {
                         Command commandSend = (Command) method.Invoke(search, new object[] { row, this }); //invocamos el methodo con la instancia searcher y le pasamos los parametros
-                        Task taskk = Sender.SendCommand(commandSend);
+                        Task taskk = Sender.Singelton().SendCommand(commandSend);
                         taskk.Wait();
                         if (taskk.IsCompletedSuccessfully) CommandsSended++;
                         else throw new NoCompletCommandSend("No se a podido enviar el command.");

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using OdbcDatabase.excepciones;
-using PlataformaPDCOnline.Editable.pdcOnline.Commands;
+using System.Threading.Tasks;
 using PlataformaPDCOnline.Internals.excepciones;
-using PlataformaPDCOnline.Internals.pdcOnline.Sender;
 using PlataformaPDCOnline.Internals.plataforma;
 
 namespace PlataformaPDCOnline
@@ -32,7 +29,7 @@ namespace PlataformaPDCOnline
             }
             Console.WriteLine("Total commands enviados: " + TotalCommandsEnviados);
 
-            Thread.Sleep(10000); //espera 10 segundos, por si acaso
+            Task.Delay(10000).Wait(); //espera 10 segundos, por si acaso
         }
 
         //inicia el programa, cargando todos los commands que hay en la base de datos informix

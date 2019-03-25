@@ -1,5 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,12 +17,18 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
 
         private static Sender CommandsSender;
 
+        public static Sender Singelton()
+        {
+            if (CommandsSender == null) CommandsSender = new Sender();
+            return CommandsSender;
+        }
+
         private readonly IConfiguration configuration;
         private readonly IServiceProvider services;
         private IHostedService boundedContext;
         private ICommandSender sender;
 
-        public Sender()
+        private Sender()
         {
             configuration = GetConfiguration();
 
