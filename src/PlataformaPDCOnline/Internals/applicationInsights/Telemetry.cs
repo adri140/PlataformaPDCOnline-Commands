@@ -1,4 +1,5 @@
 ﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using System;
 using System.Collections.Generic;
@@ -8,17 +9,17 @@ using System.Text;
 
 namespace PlataformaPDCOnline.Internals.applicationInsights
 {
-    class Telemetry //esto no me gusta
+    class Telemetry //esto no me gusta, esto no se utiliza, TMP
     {
         private static Telemetry ApplicationTelemetry;
 
-        private static Telemetry Singelton()
+        public static Telemetry Singelton()
         {
             if (ApplicationTelemetry == null) ApplicationTelemetry = new Telemetry();
             return ApplicationTelemetry;
         }
 
-        private string TelemetryKey = "the key of men";
+        private string TelemetryKey = "73f7df52-97da-45b8-9e5f-f4b3cd1aee28";
 
         private TelemetryClient client;
 
@@ -29,6 +30,7 @@ namespace PlataformaPDCOnline.Internals.applicationInsights
 
         private TelemetryClient GetAppTelemetryClient()
         {
+            TelemetryConfiguration.Active.DisableTelemetry = false;
             var config = new TelemetryConfiguration();
 
             config.InstrumentationKey = TelemetryKey;
@@ -48,9 +50,24 @@ namespace PlataformaPDCOnline.Internals.applicationInsights
             return client;
         }
 
-        public void TrackEvent(String eventMessage)
+        public void TrackEvent(string eventMessage)
         {
             client.TrackEvent(eventMessage);
+        }
+
+        public void TrackException(Exception exception)
+        {
+            client.TrackException(exception);
+        }
+
+        public void Flush()
+        {
+            client.Flush();
+        }
+
+        public void TrackMetric(MetricTelemetry metrica)
+        {
+            client.TrackMetric(metrica);
         }
     }
 }

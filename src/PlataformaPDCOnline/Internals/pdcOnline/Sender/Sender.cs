@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -6,6 +9,7 @@ using Pdc.Hosting;
 using Pdc.Messaging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -37,7 +41,7 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
             InicializeAsync();
         }
 
-        private async Task InicializeAsync()
+        private async void InicializeAsync()
         {
             using (services.GetRequiredService<IServiceScope>())
             {
@@ -99,18 +103,69 @@ namespace PlataformaPDCOnline.Internals.pdcOnline.Sender
         {
             var services = new ServiceCollection();
 
-            services.AddLogging(builder => builder.AddDebug()); //local logs
-
-            //enviar un command
+            services.AddLogging(builder => builder.AddDebug()); 
+            
             services.AddAzureServiceBusCommandSender(options => configuration.GetSection("ProcessManager:Sender").Bind(options));
-            //fin command sender
-
-            //esto es necesario siempre, no lo toques o moriras
+            
             services.AddHostedService<HostedService>();
 
             services.AddSingleton(scope => services.BuildServiceProvider().CreateScope());
+            
+            services.AddSingleton(appIns => GetAppTelemetryClient());
 
             return services.BuildServiceProvider();
+        }
+
+        private TelemetryClient GetAppTelemetryClient()
+        {
+            TelemetryConfiguration.Active.DisableTelemetry = false;
+
+            var config = new TelemetryConfiguration()
+            {
+                InstrumentationKey = "----"
+            };
+
+            config.TelemetryChannel = new Microsoft.ApplicationInsights.Channel.InMemoryChannel
+            {
+                DeveloperMode = Debugger.IsAttached
+            };
+
+#if DEBUG
+            config.TelemetryChannel.DeveloperMode = true;
+#endif
+
+            TelemetryClient client = new TelemetryClient(config);
+            client.Context.Component.Version = Assembly.GetEntryAssembly().GetName().Version.ToString();
+            //client.Context.User.Id = Guid.NewGuid().ToString();
+            client.Context.User.Id = (Environment.UserName + Environment.MachineName).GetHashCode().ToString();
+            client.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
+
+            return client;
+        }
+
+        public void TrackException(Exception e)
+        {
+            services.GetRequiredService<TelemetryClient>().TrackException(e);
+        }
+
+        public void TrackEvent(string evente)
+        {
+            services.GetRequiredService<TelemetryClient>().TrackEvent(evente);
+        }
+
+        public void TrackTrace(string trace)
+        {
+            services.GetRequiredService<TelemetryClient>().TrackTrace(trace);
+        }
+
+        public void TrackMetric(MetricTelemetry metric)
+        {
+            services.GetRequiredService<TelemetryClient>().TrackMetric(metric);
+        }
+
+        public void Flush()
+        {
+            services.GetRequiredService<TelemetryClient>().Flush();
         }
     }
 }
